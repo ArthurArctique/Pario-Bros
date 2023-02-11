@@ -16,7 +16,7 @@ while 1+1 == 2:
     if fullscreen:
         screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
     
-    bluewall = pygame.transform.scale(bluewall,(imgsize[0]*diff[0],imgsize[1]*diff[1]))
+    bluewall2 = pygame.transform.scale(bluewall,(imgsize[0]*diff[0],imgsize[1]*diff[1]))
     screen.fill((0,0,0))
     print(centre)
     screen.blit(bluewall,(centre[0]-(imgsize[0]/2),centre[1]-(imgsize[1]/2)))
