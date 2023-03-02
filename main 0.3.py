@@ -16,10 +16,10 @@ class Jeu :
 class Entity:
     def __init__(self,screen,blockliste) -> None:
         self.screen = screen
-        self.rect = pygame.Rect(50,50,32,32)
-        self.size = [32,32]
+        self.rect = pygame.Rect(50,50,32,64)
         self.blockliste = blockliste
         self.decalage = 0
+        self.marioimg = pygame.transform.scale(pygame.image.load('assets/Mario.png'),(32,64))
 
         self.pos = vec((10, 360))
         self.vel = vec(0,0)
@@ -29,19 +29,28 @@ class Entity:
 
     def draw(self):
         self.rect.x -= self.decalage
-        pygame.draw.rect(self.screen, "red", self.rect)
+        self.screen.blit(self.marioimg,self.rect)
 
-    def collisionDown(self):
+    def collision(self):
         for e in self.blockliste.values():
             for i in e :
                 if pygame.Rect.colliderect(self.rect, i) == True:
-                    return (True,i)
-        return (False,0)
+                    
+                    # par le bas
+                    if self.rect.top <= i.bottom:
+                        return (True,i,"bas")
+                    
+                    # par le haut
+                    if self.rect.bottom >= i.top:
+                        return (True,i,"haut")
+                        
+        return (False,0,"None")
+    
 
     def jump(self):
         keys = pygame.key.get_pressed()
         if keys[pygame.K_UP]:
-            if self.collisionDown()[0]:
+            if self.collision()[0]:
                 self.vel.y = -15
 
     def move(self):
@@ -58,6 +67,7 @@ class Entity:
         self.pos += self.vel + 0.5 * self.acc
 
         self.rect.midbottom = self.pos
+        
 
     def inputs(self):
         for event in pygame.event.get():
@@ -67,9 +77,14 @@ class Entity:
 
     def gravity(self):
         if self.vel.y > 0:
-            if self.collisionDown()[0]:
+            if self.collision()[0] and self.collision()[2] == "bas":
                 self.vel.y = 0
-                self.pos.y = self.collisionDown()[1].top + 1
+                self.pos.y = self.collision()[1].top + 1
+
+        if self.vel.y < 0:
+            if self.collision()[0] and self.collision()[2] == "haut":
+                self.vel.y = 0
+                self.pos.y = self.collision()[1].bottom - 1
 
     def update(self):
         self.draw()
@@ -78,6 +93,7 @@ class Entity:
         self.jump()
         self.gravity()
         
+
 class World:
     def __init__(self,screen) -> None:
         self.width , self.height = 720,480
@@ -85,6 +101,8 @@ class World:
         self.world = self.get_world()
         self.blockSize = 32
         self.decalage = 0
+        self.briqueimg = pygame.transform.scale(pygame.image.load('assets/brique.png'),(32,32))
+
 
         self.liste = []
         self.elementIntoListe()
@@ -121,7 +139,7 @@ class World:
         for e in self.liste:
             if e[2] == '#':
                 rect = pygame.Rect(e[1]*self.blockSize-self.decalage, e[0]*self.blockSize, self.blockSize, self.blockSize)
-                pygame.draw.rect(self.screen, "green", rect ,2)
+                self.screen.blit(self.briqueimg,rect)
             elif e[2] == '?':
                 rect = pygame.Rect(e[1]*self.blockSize-self.decalage, e[0]*self.blockSize, self.blockSize, self.blockSize)
                 pygame.draw.rect(self.screen, "yellow", rect ,2)   
