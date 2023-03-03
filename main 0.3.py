@@ -21,7 +21,7 @@ class Entity:
         self.decalage = 0
         self.marioimg = pygame.transform.scale(pygame.image.load('assets/Mario.png'),(32,64))
 
-        self.pos = vec((10, 360))
+        self.pos = vec((10, 350))
         self.vel = vec(0,0)
         self.acc = vec(0,0)
         self.FRIC = -0.12
@@ -36,13 +36,19 @@ class Entity:
             for i in e :
                 if pygame.Rect.colliderect(self.rect, i) == True:
                     
-                    # par le bas
-                    if self.rect.top <= i.bottom:
-                        return (True,i,"bas")
                     
+                    print(self.rect.top, i.bottom)
+                    # par le bas
+                    if self.rect.top <= i.top:
+                        return (True,i,"bas")
+                                        
                     # par le haut
-                    if self.rect.bottom >= i.top:
+
+                    if self.rect.top >= i.top:
+                        print("passe pas")
                         return (True,i,"haut")
+                    
+
                         
         return (False,0,"None")
     
@@ -64,6 +70,10 @@ class Entity:
 
         self.acc.x += self.vel.x * self.FRIC
         self.vel += self.acc
+
+#        self.vel.y = 0
+#        self.acc.y = 0
+
         self.pos += self.vel + 0.5 * self.acc
 
         self.rect.midbottom = self.pos
@@ -76,15 +86,18 @@ class Entity:
                 exit()
 
     def gravity(self):
+        
+        collision = self.collision()
+            
         if self.vel.y > 0:
-            if self.collision()[0] and self.collision()[2] == "bas":
+            if collision[0] and collision[2] == "bas":
                 self.vel.y = 0
-                self.pos.y = self.collision()[1].top + 1
-
+                self.pos.y = collision[1].top + 1
+                
         if self.vel.y < 0:
-            if self.collision()[0] and self.collision()[2] == "haut":
+            if collision[0] and collision[2] == "haut":
                 self.vel.y = 0
-                self.pos.y = self.collision()[1].bottom - 1
+                self.pos.y = collision[1].bottom + self.rect[3]
 
     def update(self):
         self.draw()
