@@ -12,7 +12,7 @@ class Jeu :
         self.world.update()
         pygame.display.flip()
         self.clock.tick(60)
-
+#test
 class Entity:
     def __init__(self,screen,blockliste) -> None:
         self.screen = screen
