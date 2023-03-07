@@ -5,7 +5,8 @@ import os
 import copy
 
 """
-Problème avec le scroling et la redimention de l'écran, ne soyez pas étonné. Ah et c'est pas fini juste j'ai pas le temps de tout faire 
+Ok c'est bon mais gueulez pas intérieurement je prévient c'est pas totalement fini genre il reste les détailles de adapter la vitesse et la taille du perso 
+selon l'écran mais tqt 
 """
 
 
@@ -13,28 +14,36 @@ vec = pygame.math.Vector2
 class Jeu :
     def __init__(self) -> None:
         self.fullscreen = False
-        
-        squale = ctypes.windll.user32.GetSystemMetrics(0), ctypes.windll.user32.GetSystemMetrics(1) # ça à l'air de fonctionner uniquement sur windows faudra tester sur linux
-        """
-        au pire version universelle : 
-            self.screen = pygame.display.set_mode((0,0), FULLSCREEN)
-            self.width , self.height = self.screen.get_size()[0] * 0.75,self.screen.get_size()[1] * 0.75
-        """
-
-        self.width , self.height = squale[0] * 0.75,squale[1] * 0.75
+        self.screen = pygame.display.set_mode((0,0), FULLSCREEN)
+        self.width , self.height = self.screen.get_size()[0] * 0.75,self.screen.get_size()[1] * 0.75
+        self.UTILE = self.width
         self.screen = pygame.display.set_mode((self.width,self.height),RESIZABLE)
         self.world = World(self.screen)
         self.clock = pygame.time.Clock()
     
     def inputs(self):
-
         for event in pygame.event.get():
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_F11:
+                    if not self.fullscreen:
+                        self.fullscreen = True
+                        self.screen = pygame.display.set_mode((0,0), FULLSCREEN)
+                        self.width,self.height = self.screen.get_size()
+                        self.world.blockSize = self.height / 15
+                        for i in self.world.briqueimg:
+                            self.world.briqueimg[i] = pygame.transform.scale(self.world.briqueimgOrigignal[i], (self.height / 15, self.height / 15))
+                            self.world.updateBL = True
+                    else:
+                        self.width , self.height = self.screen.get_size()[0] * 0.75,self.screen.get_size()[1] * 0.75
+                        self.screen = pygame.display.set_mode((self.width,self.height),RESIZABLE) 
+                        self.fullscreen = False
             if event.type == VIDEORESIZE and not self.fullscreen:
-                
+                tempo = (self.width,self.height)             
                 if event.dict['size'][0] / self.width != 1 and event.dict['size'][1] / self.height != 1:
-                    pass
+                    print('oui')
                 
                 elif event.dict['size'][0] / self.width != 1:
+                    print('oui2')
                     self.height *= event.dict['size'][0] / self.width
                     self.width = event.dict['size'][0]
                 
@@ -44,6 +53,7 @@ class Jeu :
                 
                 self.width = round(self.width)
                 self.height = round(self.height)
+                
                 self.screen = pygame.display.set_mode((self.width,self.height),RESIZABLE)
                 
                 self.world.blockSize = self.height / 15
@@ -51,6 +61,7 @@ class Jeu :
                 for i in self.world.briqueimg:
                     self.world.briqueimg[i] = pygame.transform.scale(self.world.briqueimgOrigignal[i], (self.height / 15, self.height / 15))
                 self.world.updateBL = True
+            
 
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -66,11 +77,13 @@ class Jeu :
 class Entity:
     def __init__(self,screen,blockliste,name) -> None:
         self.screen = screen
-        self.rect = pygame.Rect(50,50,32,64)
         self.blockliste = blockliste
+        self.playerSize = 0.04
         self.decalage = 0
-        self.image = pygame.transform.scale(pygame.image.load('assets/players/{}'.format(name)),(32,64))
-
+        self.original = pygame.image.load('assets/players/{}'.format(name))
+        self.height, self.width = self.original.get_size()
+        self.image = pygame.transform.scale(self.original,(self.height * self.playerSize,self.width *self.playerSize))
+        self.rect = pygame.Rect(50,50,self.height * self.playerSize,self.width *self.playerSize)
         self.pos = vec((10, 350))
         self.vel = vec(0,0)
         self.acc = vec(0,0)
@@ -149,8 +162,9 @@ class Entity:
 
 class World:
     def __init__(self,screen) -> None:
+        self.quotient = 1
         self.updateBL = False
-        self.width , self.height = 720,480
+        self.width , self.height = screen.get_size()[0],screen.get_size()[1]
         self.screen = screen
         self.world = self.get_world()
         self.blockSize = screen.get_size()[1]/15
@@ -170,7 +184,7 @@ class World:
         self.blockliste = {"#":[],"?":[]}
         for e in self.liste:
             if e[2] == '#':
-                rect = pygame.Rect(e[1]*self.blockSize-self.decalage, e[0]*self.blockSize, self.blockSize, self.blockSize)
+                rect = pygame.Rect(e[1]*self.blockSize-self.decalage*self.quotient, e[0]*self.blockSize, self.blockSize, self.blockSize)
                 self.blockliste["#"].append(rect)
             elif e[2] == '?':
                 rect = pygame.Rect(e[1]*self.blockSize-self.decalage, e[0]*self.blockSize, self.blockSize, self.blockSize)
@@ -196,14 +210,15 @@ class World:
                         self.liste.append([ligne,e,'?'])
 
     def draw_on_screen(self):
-        print(self.decalage)
         if self.updateBL:
             self.blockliste["#"] = []
             self.blockliste["?"] = []
-        for e in self.liste:
+        for e in self.liste:   
             if e[2] == '#':
-                rect = pygame.Rect(e[1]*self.blockSize-self.decalage, e[0]*self.blockSize, self.blockSize, self.blockSize)
-                if self.updateBL:
+                if not self.updateBL:
+                    rect = pygame.Rect(e[1]*self.blockSize-self.decalage, e[0]*self.blockSize, self.blockSize, self.blockSize)
+                else:
+                    rect = pygame.Rect(e[1]*self.blockSize, e[0]*self.blockSize, self.blockSize, self.blockSize)
                     self.blockliste["#"].append(rect)
                 self.screen.blit(self.briqueimg['brique.png'],rect)
             elif e[2] == '?':
@@ -219,6 +234,7 @@ class World:
             if self.players[personnage].rect.x-self.decalage > self.width*0.75:
                 self.decalage += self.players[personnage].vel[0]
                 self.players[personnage].decalage += self.players[personnage].vel[0]
+        
 
 
     def inputs(self):
