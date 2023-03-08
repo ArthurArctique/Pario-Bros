@@ -14,6 +14,7 @@ vec = pygame.math.Vector2
 class Jeu :
     def __init__(self) -> None:
         self.fullscreen = False
+        self.changement = False
         self.screen = pygame.display.set_mode((0,0), FULLSCREEN)
         self.width , self.height = self.screen.get_size()[0] * 0.75,self.screen.get_size()[1] * 0.75
         self.UTILE = self.width
@@ -24,50 +25,63 @@ class Jeu :
     def inputs(self):
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_F11:
-                    if not self.fullscreen:
-                        self.fullscreen = True
-                        self.screen = pygame.display.set_mode((0,0), FULLSCREEN)
-                        self.width,self.height = self.screen.get_size()
-                        self.world.blockSize = self.height / 15
-                        for i in self.world.briqueimg:
-                            self.world.briqueimg[i] = pygame.transform.scale(self.world.briqueimgOrigignal[i], (self.height / 15, self.height / 15))
-                            self.world.updateBL = True
-                    else:
-                        self.width , self.height = self.screen.get_size()[0] * 0.75,self.screen.get_size()[1] * 0.75
-                        self.screen = pygame.display.set_mode((self.width,self.height),RESIZABLE) 
-                        self.fullscreen = False
-            if event.type == VIDEORESIZE and not self.fullscreen:
-                tempo = (self.width,self.height)             
-                if event.dict['size'][0] / self.width != 1 and event.dict['size'][1] / self.height != 1:
-                    print('oui')
-                
-                elif event.dict['size'][0] / self.width != 1:
-                    print('oui2')
-                    self.height *= event.dict['size'][0] / self.width
-                    self.width = event.dict['size'][0]
-                
-                elif event.dict['size'][1] / self.height != 1:
-                    self.width *= event.dict['size'][1] / self.height
-                    self.height = event.dict['size'][1]
-                
-                self.width = round(self.width)
-                self.height = round(self.height)
-                
-                self.screen = pygame.display.set_mode((self.width,self.height),RESIZABLE)
-                
-                self.world.blockSize = self.height / 15
-                
-                for i in self.world.briqueimg:
-                    self.world.briqueimg[i] = pygame.transform.scale(self.world.briqueimgOrigignal[i], (self.height / 15, self.height / 15))
-                self.world.updateBL = True
+                if event.key == pygame.K_F11 and not self.fullscreen:
+                    self.fullscreen = True
+                    self.screen = pygame.display.set_mode((0,0), FULLSCREEN)
+                    self.width, self.height = self.screen.get_size()
+                    self.changement = True
+                elif event.key == pygame.K_F11 and self.fullscreen:
+                    self.screen = pygame.display.set_mode((self.screen.get_size()[0]*0.75,self.screen.get_size()[1]*0.75),RESIZABLE)   
+                    self.width, self.height = self.screen.get_size()
+                    self.fullscreen = False
+                    self.changement = True
             
-
+            if event.type == VIDEORESIZE and not self.fullscreen:
+                    self.changement = True
+                    if event.dict['size'][0] / self.width != 1 and event.dict['size'][1] / self.height != 1:
+                        pass
+                    
+                    elif event.dict['size'][0] / self.width != 1:
+                        self.height *= event.dict['size'][0] / self.width
+                        self.width = event.dict['size'][0]
+                        
+                    
+                    elif event.dict['size'][1] / self.height != 1:
+                        self.width *= event.dict['size'][1] / self.height
+                        self.height = event.dict['size'][1]
+                    self.width = round(self.width)
+                    self.height = round(self.height)
+                    self.screen = pygame.display.set_mode((self.width,self.height),RESIZABLE)
+            
             if event.type == pygame.QUIT:
                 pygame.quit()
                 exit()
+                
+        if self.changement:  
+            self.world.blockSize = self.height / 15
+            
+            for i in self.world.briqueimg:
+                self.world.briqueimg[i] = pygame.transform.scale(self.world.briqueimgOrigignal[i], (self.height / 15, self.height / 15))
+            
+            for i in self.world.players:
+                quotient = self.screen.get_size()[0] / self.world.width
+                self.world.players[i].vitesse = quotient * 0.75 
+                self.world.players[i].image = pygame.transform.scale(self.world.players[i].original, ((self.world.players[i].original.get_size()[0] * self.world.players[i].playerSize) * quotient, (self.world.players[i].original.get_size()[1] *  self.world.players[i].playerSize)* quotient ))
+                self.world.players[i].rect.width = self.world.players[i].image.get_rect().width
+                self.world.players[i].rect.height = self.world.players[i].image.get_rect().height
+                self.world.players[i].updateSc = True
+                
+                
+                
+                
+                
+            self.world.updateBL = True
+            self.changement = False
+
+            
 
     def update(self):
+        #print(self.world.players['Mario.png'].rect)
         self.screen.fill("black")
         self.world.update()
         self.inputs()
@@ -83,12 +97,12 @@ class Entity:
         self.original = pygame.image.load('assets/players/{}'.format(name))
         self.height, self.width = self.original.get_size()
         self.image = pygame.transform.scale(self.original,(self.height * self.playerSize,self.width *self.playerSize))
-        self.rect = pygame.Rect(50,50,self.height * self.playerSize,self.width *self.playerSize)
+        self.rect = self.image.get_rect()
         self.pos = vec((10, 350))
         self.vel = vec(0,0)
         self.acc = vec(0,0)
         self.FRIC = -0.12
-        self.ACC = 0.5
+        self.vitesse = 0.75 #c'était un peu lent en vrai et c'est plus une constante ducoup et c'est self.vitesse maintenant stop faire les ricains "AcuRrrracY" ça y est a un moment. (oui ça veut pas dire vitesse menfou si on change la valeur ça accelère donc c'est vitesse)
 
     def draw(self):
         self.rect.x -= self.decalage
@@ -125,9 +139,9 @@ class Entity:
 
         keys = pygame.key.get_pressed()
         if keys[pygame.K_RIGHT]:
-            self.acc.x = self.ACC
+            self.acc.x = self.vitesse
         if keys[pygame.K_LEFT]:
-            self.acc.x = -self.ACC
+            self.acc.x = -self.vitesse
 
         self.acc.x += self.vel.x * self.FRIC
         self.vel += self.acc
@@ -136,7 +150,7 @@ class Entity:
 #        self.acc.y = 0
 
         self.pos += self.vel + 0.5 * self.acc
-
+        print(self.rect.midbottom)
         self.rect.midbottom = self.pos
 
     def gravity(self):
@@ -162,7 +176,6 @@ class Entity:
 
 class World:
     def __init__(self,screen) -> None:
-        self.quotient = 1
         self.updateBL = False
         self.width , self.height = screen.get_size()[0],screen.get_size()[1]
         self.screen = screen
@@ -184,7 +197,7 @@ class World:
         self.blockliste = {"#":[],"?":[]}
         for e in self.liste:
             if e[2] == '#':
-                rect = pygame.Rect(e[1]*self.blockSize-self.decalage*self.quotient, e[0]*self.blockSize, self.blockSize, self.blockSize)
+                rect = pygame.Rect(e[1]*self.blockSize-self.decalage, e[0]*self.blockSize, self.blockSize, self.blockSize)
                 self.blockliste["#"].append(rect)
             elif e[2] == '?':
                 rect = pygame.Rect(e[1]*self.blockSize-self.decalage, e[0]*self.blockSize, self.blockSize, self.blockSize)
@@ -225,14 +238,15 @@ class World:
                 rect = pygame.Rect(e[1]*self.blockSize-self.decalage, e[0]*self.blockSize, self.blockSize, self.blockSize)
                 if self.updateBL:
                     self.blockliste["?"].append(rect)
+                self.decalage *= self.width / self.screen.get_size()[0]
                 pygame.draw.rect(self.screen, "yellow", rect ,2)   
         self.updateBL = False
 
 
     def scrolling(self):
         for personnage in self.players:
-            if self.players[personnage].rect.x-self.decalage > self.width*0.75:
-                self.decalage += self.players[personnage].vel[0]
+            if self.players[personnage].rect.x - self.decalage > self.screen.get_size()[0]*0.75:
+                self.decalage += self.players[personnage].vel[0] 
                 self.players[personnage].decalage += self.players[personnage].vel[0]
         
 
