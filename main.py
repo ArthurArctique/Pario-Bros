@@ -102,7 +102,7 @@ class Entity:
         self.vel = vec(0,0)
         self.acc = vec(0,0)
         self.FRIC = -0.12
-        self.vitesse = 0.75 #c'était un peu lent en vrai et c'est plus une constante ducoup et c'est self.vitesse maintenant stop faire les ricains "AcuRrrracY" ça y est a un moment. (oui ça veut pas dire vitesse menfou si on change la valeur ça accelère donc c'est vitesse)
+        self.vitesse = 0.75 #c'était un peu lent en vrai et c'est plus une constante ducoup et c'est self.vitesse
 
     def draw(self):
         self.rect.x -= self.decalage
