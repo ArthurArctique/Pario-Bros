@@ -70,7 +70,7 @@ class Jeu :
                 self.world.players[i].rect.width = self.world.players[i].image.get_rect().width
                 self.world.players[i].rect.height = self.world.players[i].image.get_rect().height
                 self.world.players[i].updateSc = True
-                
+                self.world.players[i].qJump = quotient
                 
                 
                 
@@ -81,7 +81,6 @@ class Jeu :
             
 
     def update(self):
-        #print(self.world.players['Mario.png'].rect)
         self.screen.fill("black")
         self.world.update()
         self.inputs()
@@ -90,6 +89,7 @@ class Jeu :
 
 class Entity:
     def __init__(self,screen,blockliste,name) -> None:
+        self.qJump = 1
         self.screen = screen
         self.blockliste = blockliste
         self.playerSize = 0.04
@@ -132,7 +132,7 @@ class Entity:
         keys = pygame.key.get_pressed()
         if keys[pygame.K_UP]:
             if self.collision()[0]:
-                self.vel.y = -15
+                self.vel.y = - ( 15 * self.qJump)
 
     def move(self):
         self.acc = vec(0,0.5)
@@ -150,7 +150,6 @@ class Entity:
 #        self.acc.y = 0
 
         self.pos += self.vel + 0.5 * self.acc
-        print(self.rect.midbottom)
         self.rect.midbottom = self.pos
 
     def gravity(self):
