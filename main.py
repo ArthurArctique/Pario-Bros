@@ -3,18 +3,17 @@ from pygame.locals import *
 import ctypes
 import os
 import copy
-
-"""
-Ok c'est bon mais gueulez pas intérieurement je prévient c'est pas totalement fini genre il reste les détailles de adapter la vitesse et la taille du perso 
-selon l'écran mais tqt 
-"""
-
+import numpy
 
 vec = pygame.math.Vector2
+
 class Jeu :
     def __init__(self) -> None:
+        self.jeu = False
+        self.menu = True
         self.fullscreen = False
         self.changement = False
+        self.firstResize = True
         self.screen = pygame.display.set_mode((0,0), FULLSCREEN)
         self.width , self.height = self.screen.get_size()[0] * 0.75,self.screen.get_size()[1] * 0.75
         self.UTILE = self.width
@@ -25,18 +24,27 @@ class Jeu :
     def inputs(self):
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_F11 and not self.fullscreen:
+                if event.key == pygame.K_SPACE:
+                    if not self.fullscreen:
+                        self.screen = pygame.display.set_mode((self.width,self.height))
+                    self.menu = False
+                    self.jeu = True
+                if event.key == pygame.K_F11 and not self.fullscreen and not self.jeu:
+
                     self.fullscreen = True
                     self.screen = pygame.display.set_mode((0,0), FULLSCREEN)
                     self.width, self.height = self.screen.get_size()
                     self.changement = True
-                elif event.key == pygame.K_F11 and self.fullscreen:
+                elif event.key == pygame.K_F11 and self.fullscreen and not self.jeu:
                     self.screen = pygame.display.set_mode((self.screen.get_size()[0]*0.75,self.screen.get_size()[1]*0.75),RESIZABLE)   
                     self.width, self.height = self.screen.get_size()
                     self.fullscreen = False
                     self.changement = True
             
-            if event.type == VIDEORESIZE and not self.fullscreen:
+            if event.type == VIDEORESIZE and not self.fullscreen and self.menu:
+                    if self.firstResize:
+                        self.firstResize = False
+                        break
                     self.changement = True
                     if event.dict['size'][0] / self.width != 1 and event.dict['size'][1] / self.height != 1:
                         pass
@@ -49,141 +57,167 @@ class Jeu :
                     elif event.dict['size'][1] / self.height != 1:
                         self.width *= event.dict['size'][1] / self.height
                         self.height = event.dict['size'][1]
-                    self.width = round(self.width)
-                    self.height = round(self.height)
+                    self.width = int(self.width)
+                    self.height = int(self.height)
                     self.screen = pygame.display.set_mode((self.width,self.height),RESIZABLE)
-            
             if event.type == pygame.QUIT:
                 pygame.quit()
                 exit()
                 
-        if self.changement:  
-            self.world.blockSize = self.height / 15
+        if self.changement and not self.firstResize:   
             
+            self.world.blockSize = self.height / 15
             for i in self.world.briqueimg:
                 self.world.briqueimg[i] = pygame.transform.scale(self.world.briqueimgOrigignal[i], (self.height / 15, self.height / 15))
             
             for i in self.world.players:
-                quotient = self.screen.get_size()[0] / self.world.width
-                self.world.players[i].vitesse = quotient * 0.75 
+                quotient = self.width / self.world.width
+                self.world.players[i].vitesse = quotient * 0.75
+                self.world.players[i].qJump = quotient  
                 self.world.players[i].image = pygame.transform.scale(self.world.players[i].original, ((self.world.players[i].original.get_size()[0] * self.world.players[i].playerSize) * quotient, (self.world.players[i].original.get_size()[1] *  self.world.players[i].playerSize)* quotient ))
                 self.world.players[i].rect.width = self.world.players[i].image.get_rect().width
                 self.world.players[i].rect.height = self.world.players[i].image.get_rect().height
                 self.world.players[i].updateSc = True
-                self.world.players[i].qJump = quotient
-                
-                
-                
-                
+                self.world.players[i].pos.x *= quotient
             self.world.updateBL = True
             self.changement = False
+                
 
             
 
     def update(self):
-        self.screen.fill("black")
-        self.world.update()
-        self.inputs()
+        if self.menu:
+            self.screen.fill("black")
+            self.inputs()
+        if self.jeu:
+            self.screen.fill("black")
+            self.world.update()
+            self.inputs()
         pygame.display.flip()
         self.clock.tick(60)
 
 class Entity:
-    def __init__(self,screen,blockliste,name) -> None:
+    def __init__(self,screen,blockRECT,name,joueur) -> None:
         self.qJump = 1
         self.screen = screen
-        self.blockliste = blockliste
+        self.blockRECT = blockRECT
         self.playerSize = 0.04
         self.decalage = 0
-        self.original = pygame.image.load('assets/players/{}'.format(name))
+        self.speed = 4
+        self.joueur = joueur
+        if joueur:
+            self.original = pygame.image.load('assets/players/{}'.format(name))
+            self.joueur = True
+            self.pos = vec((10, 360))
+        else:
+            self.original = pygame.image.load('assets/monstres/{}'.format(name))
+            self.pos = vec((150,450))
+            self.speed = 3
+        
         self.height, self.width = self.original.get_size()
         self.image = pygame.transform.scale(self.original,(self.height * self.playerSize,self.width *self.playerSize))
         self.rect = self.image.get_rect()
-        self.pos = vec((10, 350))
-        self.vel = vec(0,0)
-        self.acc = vec(0,0)
-        self.FRIC = -0.12
-        self.vitesse = 0.75 #c'était un peu lent en vrai et c'est plus une constante ducoup et c'est self.vitesse
+        self.pos = vec((200, 0))
+        self.jumpspeed = 20
+        self.speedVerti = 0
+        self.speedHori = 0
+        self.gravity = 1
+        self.min_jumpspeed = 4
+        self.prev_key = pygame.key.get_pressed()
+            
 
     def draw(self):
         self.rect.x -= self.decalage
         self.screen.blit(self.image,self.rect)
 
-    def collision(self):
-        for e in self.blockliste.values():
-            for i in e :
-                if pygame.Rect.colliderect(self.rect, i) == True:
-                    
-                    
-                    # par le bas
-                    if self.rect.top <= i.top:
-                        return (True,i,"bas")
-                                        
-                    # par le haut
-
-                    if self.rect.top >= i.top:
-                        return (True,i,"haut")
-                    
-
-                        
-        return (False,0,"None")
-    
-
     def jump(self):
         keys = pygame.key.get_pressed()
         if keys[pygame.K_UP]:
-            if self.collision()[0]:
-                self.vel.y = - ( 15 * self.qJump)
+            self.vel.y = -15
 
-    def move(self):
-        self.acc = vec(0,0.5)
+    def updateTuto(self):
+        self.speedHori = 0
+        onground = self.check_collision(0, 1)
+        # check keys
+        key = pygame.key.get_pressed()
+        if key[pygame.K_LEFT] and self.joueur:
+            self.speedHori = -self.speed
+        elif key[pygame.K_RIGHT] and self.joueur:
+            self.speedHori = self.speed
 
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_RIGHT]:
-            self.acc.x = self.vitesse
-        if keys[pygame.K_LEFT]:
-            self.acc.x = -self.vitesse
+        if key[pygame.K_UP] and onground and self.joueur:
+            self.speedVerti = -self.jumpspeed
 
-        self.acc.x += self.vel.x * self.FRIC
-        self.vel += self.acc
+        # variable height jumping
+        if self.prev_key[pygame.K_UP] and not key[pygame.K_UP]:
+            if self.speedVerti < -self.min_jumpspeed:
+                self.speedVerti = -self.min_jumpspeed
 
-#        self.vel.y = 0
-#        self.acc.y = 0
+        self.prev_key = key
 
-        self.pos += self.vel + 0.5 * self.acc
+        # gravity
+        if self.speedVerti < 10 and not onground:  # 9.8 rounded up
+            self.speedVerti += self.gravity
+
+        if onground and self.speedVerti > 0:
+            self.speedVerti = 0
+
+        # movement
+        self.move(self.speedHori, self.speedVerti)
+
+    def inputs(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+
+    def check_collision(self, x, y):
+        collide = False
+        self.pos += [x,y]
+        self.rect.midbottom = self.pos
+        for e in self.blockRECT.values():
+            for i in e :
+                if pygame.Rect.colliderect(self.rect, i) == True:
+                    collide = True
+        self.pos += [-x,-y]
+        self.rect.midbottom = self.pos
+        return collide
+    
+    def move(self,x,y):
+        dx = x
+        dy = y
+        
+        while self.check_collision(0, dy):
+            dy -= numpy.sign(dy)
+
+        while self.check_collision(dx, dy):
+            dx -= numpy.sign(dx)
+        
+        self.pos += [dx,dy]
+
         self.rect.midbottom = self.pos
 
-    def gravity(self):
-        
-        collision = self.collision()
-            
-        if self.vel.y > 0:
-            if collision[0] and collision[2] == "bas":
-                self.vel.y = 0
-                self.pos.y = collision[1].top + 1
-                
-        if self.vel.y < 0:
-            if collision[0] and collision[2] == "haut":
-                self.vel.y = 0
-                self.pos.y = collision[1].bottom + self.rect[3]
-
     def update(self):
+        self.inputs()
+        self.updateTuto()
         self.draw()
-        self.move()
-        self.jump()
-        self.gravity()
         
 
 class World:
     def __init__(self,screen) -> None:
         self.updateBL = False
+        self.tqt = 0
         self.width , self.height = screen.get_size()[0],screen.get_size()[1]
         self.screen = screen
-        self.world = self.get_world()
+        self.world = self.get_txt('world')
         self.blockSize = screen.get_size()[1]/15
         self.decalage = 0
         self.briqueimgOrigignal = {}
         self.briqueimg = {}
         self.players = {}
+        self.instruDict = {}
+        self.monstre = {}
+        self.dicoInstru(self.get_txt('block'))
         
         for name in os.listdir('assets/world'):
             self.briqueimgOrigignal[name] = pygame.transform.scale(pygame.image.load('assets/world/{}'.format(name)),(self.blockSize,self.blockSize))
@@ -193,24 +227,48 @@ class World:
 
         self.liste = []
         self.elementIntoListe()
-        self.blockliste = {"#":[],"?":[]}
+        self.blockRECT = {"#":[],"?":[]}
         for e in self.liste:
             if e[2] == '#':
                 rect = pygame.Rect(e[1]*self.blockSize-self.decalage, e[0]*self.blockSize, self.blockSize, self.blockSize)
-                self.blockliste["#"].append(rect)
+                self.blockRECT["#"].append(rect)
             elif e[2] == '?':
                 rect = pygame.Rect(e[1]*self.blockSize-self.decalage, e[0]*self.blockSize, self.blockSize, self.blockSize)
-                self.blockliste["?"].append(rect)
+                self.blockRECT["?"].append(rect)
         
         for name in os.listdir('assets/players'):
-            self.players[name] = Entity(self.screen,self.blockliste,name)
+            self.players[name] = Entity(self.screen,self.blockRECT,name,True)
+        for name in os.listdir('assets/monstres'):
+            self.monstre[name] = Entity(self.screen,self.blockRECT,name,False)
 
-    def get_world(self):
-        file = open('world.txt', 'r')
+    def get_txt(self,nom):
+        file = open(f'{nom}.txt', 'r')
         data = file.read()
         liste = data.split("\n")
         file.close()
         return liste
+    
+    def dicoInstru(self,liste):
+        for i in liste:
+            c = 0
+            on_liste = False
+            chaineCAr = ""
+            for lettre in i:
+                if c == 0:
+                    self.instruDict[i[0]] = []
+                    c = 1
+                    continue
+                else:
+                    if lettre == '[':
+                        continue
+                    elif lettre != ',' and lettre != ']' and lettre != ':' and lettre != '':
+                        chaineCAr = chaineCAr + lettre
+                    if lettre == ']' or lettre == ',':
+                        self.instruDict[i[0]].append(chaineCAr)
+                        chaineCAr = ''
+                        if lettre == ']':
+                            break
+
     
     def elementIntoListe(self):
         for ligne in range(len(self.world)):
@@ -223,41 +281,47 @@ class World:
 
     def draw_on_screen(self):
         if self.updateBL:
-            self.blockliste["#"] = []
-            self.blockliste["?"] = []
+            self.blockRECT["#"] = []
+            self.blockRECT["?"] = []
         for e in self.liste:   
             if e[2] == '#':
                 if not self.updateBL:
                     rect = pygame.Rect(e[1]*self.blockSize-self.decalage, e[0]*self.blockSize, self.blockSize, self.blockSize)
+                    self.screen.blit(self.briqueimg['brique.png'],rect)
                 else:
                     rect = pygame.Rect(e[1]*self.blockSize, e[0]*self.blockSize, self.blockSize, self.blockSize)
-                    self.blockliste["#"].append(rect)
-                self.screen.blit(self.briqueimg['brique.png'],rect)
+                    self.blockRECT["#"].append(rect)
+                    
+                
             elif e[2] == '?':
                 rect = pygame.Rect(e[1]*self.blockSize-self.decalage, e[0]*self.blockSize, self.blockSize, self.blockSize)
                 if self.updateBL:
-                    self.blockliste["?"].append(rect)
+                    self.blockRECT["?"].append(rect)
                 self.decalage *= self.width / self.screen.get_size()[0]
                 pygame.draw.rect(self.screen, "yellow", rect ,2)   
         self.updateBL = False
 
 
     def scrolling(self):
-        for personnage in self.players:
-            if self.players[personnage].rect.x - self.decalage > self.screen.get_size()[0]*0.75:
-                self.decalage += self.players[personnage].vel[0] 
-                self.players[personnage].decalage += self.players[personnage].vel[0]
-        
+        for name in self.players:
+            if self.players[name].rect.x-self.players[name].decalage >= self.width*0.75-self.decalage:     
+                self.decalage += self.players[name].speedHori
+                self.players[name].decalage = self.decalage
+
+            if self.players[name].rect.x-self.players[name].decalage <= self.width*0.25-self.decalage and self.decalage>0:     
+                self.decalage += self.players[name].speedHori
+                self.players[name].decalage = self.decalage
+            
 
 
     def inputs(self):
         keys = pygame.key.get_pressed()
         if keys[pygame.K_d]:
             self.decalage +=5
-            self.mario.decalage +=5
+            self.players['Mario.png'].decalage +=5
         if keys[pygame.K_q]:
             self.decalage -=5
-            self.mario.decalage -=5
+            self.players['Mario.png'].decalage -=5
 
 
 
@@ -267,6 +331,8 @@ class World:
         self.draw_on_screen()
         for personnage in self.players:
             self.players[personnage].update()
+        for monstres in self.monstre:
+            self.monstre[monstres].update()
         
 
    

@@ -1,0 +1,2 @@
+#:[brique.png,True,True,True]
+a:[brique.png,True,True,True]
