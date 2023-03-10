@@ -29,10 +29,43 @@ class Jeu :
                         self.screen = pygame.display.set_mode((self.width,self.height))
                     self.menu = False
                     self.jeu = True
-                if event.key == pygame.K_F11 and not self.jeu:
+                if event.key == pygame.K_F11 and not self.fullscreen and not self.jeu:
+
                     self.fullscreen = True
                     self.screen = pygame.display.set_mode((0,0), FULLSCREEN)
-                    self.width,self.height = self.screen.get_size()
+                    self.width, self.height = self.screen.get_size()
+                    self.changement = True
+                elif event.key == pygame.K_F11 and self.fullscreen and not self.jeu:
+                    self.screen = pygame.display.set_mode((self.screen.get_size()[0]*0.75,self.screen.get_size()[1]*0.75),RESIZABLE)   
+                    self.width, self.height = self.screen.get_size()
+                    self.fullscreen = False
+                    self.changement = True
+            
+            if event.type == VIDEORESIZE and not self.fullscreen and self.menu:
+                    if self.firstResize:
+                        self.firstResize = False
+                        break
+                    self.changement = True
+                    if event.dict['size'][0] / self.width != 1 and event.dict['size'][1] / self.height != 1:
+                        pass
+                    
+                    elif event.dict['size'][0] / self.width != 1:
+                        self.height *= event.dict['size'][0] / self.width
+                        self.width = event.dict['size'][0]
+                        
+                    
+                    elif event.dict['size'][1] / self.height != 1:
+                        self.width *= event.dict['size'][1] / self.height
+                        self.height = event.dict['size'][1]
+                    self.width = int(self.width)
+                    self.height = int(self.height)
+                    self.screen = pygame.display.set_mode((self.width,self.height),RESIZABLE)
+            
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+                
+        if self.changement and not self.firstResize:   
             
             self.world.blockSize = self.height / 15
             for i in self.world.briqueimg:
@@ -40,15 +73,15 @@ class Jeu :
             
             for i in self.world.players:
                 quotient = self.width / self.world.width
+                self.world.players[i].vitesse = quotient * 0.75
+                self.world.players[i].qJump = quotient  
                 self.world.players[i].image = pygame.transform.scale(self.world.players[i].original, ((self.world.players[i].original.get_size()[0] * self.world.players[i].playerSize) * quotient, (self.world.players[i].original.get_size()[1] *  self.world.players[i].playerSize)* quotient ))
                 self.world.players[i].rect.width = self.world.players[i].image.get_rect().width
                 self.world.players[i].rect.height = self.world.players[i].image.get_rect().height
                 self.world.players[i].updateSc = True
+                self.world.players[i].pos.x *= quotient
             self.world.updateBL = True
-        
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                exit()
+            self.changement = False
                 
 
             
