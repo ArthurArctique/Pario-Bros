@@ -1,66 +1,84 @@
 import pygame 
 from pygame.locals import *
-import ctypes
 import os
 import copy
 import numpy
-
+from screeninfo import get_monitors
+pygame.init()
 vec = pygame.math.Vector2
 
-class Jeu :
+class Menu:
     def __init__(self) -> None:
-        self.jeu = False
-        self.menu = True
+        self.width , self.height = get_monitors()[0].width * 0.75,get_monitors()[0].height * 0.75
+        self.screen = pygame.display.set_mode((self.width,self.height))
+        self.font = pygame.font.SysFont('Arial', 32)
         self.fullscreen = False
-        self.changement = False
-        self.firstResize = True
-        self.screen = pygame.display.set_mode((0,0), FULLSCREEN)
-        self.width , self.height = self.screen.get_size()[0] * 0.75,self.screen.get_size()[1] * 0.75
-        self.UTILE = self.width
-        self.screen = pygame.display.set_mode((self.width,self.height),RESIZABLE)
-        self.world = World(self.screen)
+        self.etat = True
+        self.position = 'main'
+    
+    def on_est_ou(self):
+        if self.position == 'main':
+            self.main()
+        elif self.position == 'optionRes':
+            self.optionRes()
+        elif self.position == 'jouer':
+            self.etat = False
+   
+    def main(self):
+        self.screen.fill('black')
+        self.x,self.y = pygame.mouse.get_pos()
+        
+        """
+        Biensur ça va pas rester comme ça vu qu'il y aura des images ça sera des formules et les 'main' 'optionRes' machin trucs seront récupéré avec le nom des fichier comme 
+        les mobs joueurs etc 
+        """
+        res = self.font.render("Resolution", True, (255, 255, 255))
+        resRect = res.get_rect()
+       
+        jouer = self.font.render("jouer", True, (255, 255, 255))
+        jouerRect = res.get_rect()
+        jouerRect.y += resRect.height
+        
+        if  resRect.x <= self.x <= resRect.width and resRect.y <= self.y <= resRect.height and pygame.mouse.get_pressed()[0]:
+            self.position = 'optionRes'
+        if  jouerRect.left <= self.x <= jouerRect.right and jouerRect.y <= self.y <= jouerRect.bottom and pygame.mouse.get_pressed()[0]:
+            self.position = 'jouer'
+        
+        
+        self.screen.blit(res,resRect)
+        self.screen.blit(jouer,jouerRect)
+    
+    def optionRes(self):
+        self.screen.fill('blue') # elle est pour toi celle la Maelan 
+
+    def update(self):
+        self.on_est_ou()
+        pygame.display.flip()
+
+class Jeu:
+    def __init__(self) -> None:
+        self.etat = False
+        self.menu = Menu()
         self.clock = pygame.time.Clock()
+        self.world = World(self.menu.screen)
+        
     
     def inputs(self):
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
-                    if not self.fullscreen:
-                        self.screen = pygame.display.set_mode((self.width,self.height))
-                    self.menu = False
-                    self.jeu = True
-                if event.key == pygame.K_F11 and not self.jeu:
-                    self.fullscreen = True
-                    self.screen = pygame.display.set_mode((0,0), FULLSCREEN)
-                    self.width,self.height = self.screen.get_size()
-            
-            self.world.blockSize = self.height / 15
-            for i in self.world.briqueimg:
-                self.world.briqueimg[i] = pygame.transform.scale(self.world.briqueimgOrigignal[i], (self.height / 15, self.height / 15))
-            
-            for i in self.world.players:
-                quotient = self.width / self.world.width
-                self.world.players[i].image = pygame.transform.scale(self.world.players[i].original, ((self.world.players[i].original.get_size()[0] * self.world.players[i].playerSize) * quotient, (self.world.players[i].original.get_size()[1] *  self.world.players[i].playerSize)* quotient ))
-                self.world.players[i].rect.width = self.world.players[i].image.get_rect().width
-                self.world.players[i].rect.height = self.world.players[i].image.get_rect().height
-                self.world.players[i].updateSc = True
-            self.world.updateBL = True
+                        pass
         
             if event.type == pygame.QUIT:
                 pygame.quit()
                 exit()
-                
-
-            
 
     def update(self):
-        if self.menu:
-            self.screen.fill("black")
-            self.inputs()
-        if self.jeu:
-            self.screen.fill("black")
+        if not self.menu.etat:
             self.world.update()
-            self.inputs()
+        else:
+            self.menu.update()
+        self.inputs()
         pygame.display.flip()
         self.clock.tick(60)
 
@@ -86,7 +104,7 @@ class Entity:
         self.image = pygame.transform.scale(self.original,(self.height * self.playerSize,self.width *self.playerSize))
         self.rect = self.image.get_rect()
         self.pos = vec((200, 0))
-        self.jumpspeed = 20
+        self.jumpspeed = self.screen.get_size()[1] / 30
         self.speedVerti = 0
         self.speedHori = 0
         self.gravity = 1
@@ -98,13 +116,9 @@ class Entity:
         self.rect.x -= self.decalage
         self.screen.blit(self.image,self.rect)
 
-    def jump(self):
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_UP]:
-            self.vel.y = -self.screen.get_size()[1] / 20
 
     def updateTuto(self):
-        self.speedHori = 0
+        self.speedHori *= 0.88
         onground = self.check_collision(0, 1)
         # check keys
         key = pygame.key.get_pressed()
@@ -232,10 +246,13 @@ class World:
                     elif lettre != ',' and lettre != ']' and lettre != ':' and lettre != '':
                         chaineCAr = chaineCAr + lettre
                     if lettre == ']' or lettre == ',':
+                        if chaineCAr == 'True' or chaineCAr == 'False':
+                            chaineCAr = bool(chaineCAr)
                         self.instruDict[i[0]].append(chaineCAr)
                         chaineCAr = ''
                         if lettre == ']':
                             break
+        
 
     
     def elementIntoListe(self):
@@ -294,6 +311,7 @@ class World:
 
 
     def update(self):
+        self.screen.fill("black")
         self.inputs()
         self.scrolling()
         self.draw_on_screen()
@@ -302,9 +320,6 @@ class World:
         for monstres in self.monstre:
             self.monstre[monstres].update()
         
-
-   
-
 jeu = Jeu()
 while True :
     jeu.update()
