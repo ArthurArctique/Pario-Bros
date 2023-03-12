@@ -65,10 +65,6 @@ class Jeu:
     
     def inputs(self):
         for event in pygame.event.get():
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE:
-                        pass
-        
             if event.type == pygame.QUIT:
                 pygame.quit()
                 exit()
@@ -188,10 +184,9 @@ class Entity:
 class World:
     def __init__(self,screen) -> None:
         self.updateBL = False
-        self.tqt = 0
         self.width , self.height = screen.get_size()[0],screen.get_size()[1]
         self.screen = screen
-        self.world = self.get_txt('world')
+        self.world = self.get_txt('monde1/niveau1')
         self.blockSize = screen.get_size()[1]/15
         self.decalage = 0
         self.briqueimgOrigignal = {}
@@ -199,29 +194,30 @@ class World:
         self.players = {}
         self.instruDict = {}
         self.monstre = {}
+        self.position = 'jeu'
         self.dicoInstru(self.get_txt('block'))
         
         for name in os.listdir('assets/world'):
             self.briqueimgOrigignal[name] = pygame.transform.scale(pygame.image.load('assets/world/{}'.format(name)),(self.blockSize,self.blockSize))
             self.briqueimg[name] = pygame.transform.scale(pygame.image.load('assets/world/{}'.format(name)),(self.blockSize,self.blockSize))
-        
-
 
         self.liste = []
         self.elementIntoListe()
-        self.blockRECT = {"#":[],"?":[]}
+        self.blockRECT = {}
+        for i in self.instruDict:
+            self.blockRECT[i] = []
         for e in self.liste:
-            if e[2] == '#':
-                rect = pygame.Rect(e[1]*self.blockSize-self.decalage, e[0]*self.blockSize, self.blockSize, self.blockSize)
-                self.blockRECT["#"].append(rect)
-            elif e[2] == '?':
-                rect = pygame.Rect(e[1]*self.blockSize-self.decalage, e[0]*self.blockSize, self.blockSize, self.blockSize)
-                self.blockRECT["?"].append(rect)
+            for instru in self.instruDict:
+                if e[2] == instru:
+                    rect = pygame.Rect(e[1]*self.blockSize-self.decalage, e[0]*self.blockSize, self.blockSize, self.blockSize)
+                    if self.instruDict[instru][1]:
+                        self.blockRECT[instru].append(rect)
         
         for name in os.listdir('assets/players'):
             self.players[name] = Entity(self.screen,self.blockRECT,name,True)
         for name in os.listdir('assets/monstres'):
             self.monstre[name] = Entity(self.screen,self.blockRECT,name,False)
+    
 
     def get_txt(self,nom):
         file = open(f'{nom}.txt', 'r')
@@ -233,9 +229,9 @@ class World:
     def dicoInstru(self,liste):
         for i in liste:
             c = 0
-            on_liste = False
             chaineCAr = ""
             for lettre in i:
+                print(lettre)
                 if c == 0:
                     self.instruDict[i[0]] = []
                     c = 1
@@ -246,8 +242,11 @@ class World:
                     elif lettre != ',' and lettre != ']' and lettre != ':' and lettre != '':
                         chaineCAr = chaineCAr + lettre
                     if lettre == ']' or lettre == ',':
-                        if chaineCAr == 'True' or chaineCAr == 'False':
-                            chaineCAr = bool(chaineCAr)
+                        
+                        if chaineCAr == 'True':
+                            chaineCAr = True
+                        elif chaineCAr == 'False':
+                            chaineCAr = False
                         self.instruDict[i[0]].append(chaineCAr)
                         chaineCAr = ''
                         if lettre == ']':
@@ -259,31 +258,25 @@ class World:
         for ligne in range(len(self.world)):
             if self.world[ligne] != '':
                 for e in range(len(self.world[ligne])):
-                    if self.world[ligne][e] == '#':
-                        self.liste.append([ligne,e,'#'])
-                    elif self.world[ligne][e] == '?':
-                        self.liste.append([ligne,e,'?'])
+                    for instru in self.instruDict:
+                        if self.world[ligne][e] == instru:
+                            self.liste.append([ligne,e,instru])
+
 
     def draw_on_screen(self):
         if self.updateBL:
-            self.blockRECT["#"] = []
-            self.blockRECT["?"] = []
-        for e in self.liste:   
-            if e[2] == '#':
-                if not self.updateBL:
-                    rect = pygame.Rect(e[1]*self.blockSize-self.decalage, e[0]*self.blockSize, self.blockSize, self.blockSize)
-                    self.screen.blit(self.briqueimg['brique.png'],rect)
-                else:
-                    rect = pygame.Rect(e[1]*self.blockSize, e[0]*self.blockSize, self.blockSize, self.blockSize)
-                    self.blockRECT["#"].append(rect)
-                    
-                
-            elif e[2] == '?':
-                rect = pygame.Rect(e[1]*self.blockSize-self.decalage, e[0]*self.blockSize, self.blockSize, self.blockSize)
-                if self.updateBL:
-                    self.blockRECT["?"].append(rect)
-                self.decalage *= self.width / self.screen.get_size()[0]
-                pygame.draw.rect(self.screen, "yellow", rect ,2)   
+            for instru in self.instruDict:
+                self.blockRECT[instru] = []
+        for e in self.liste:  
+            for instru in self.instruDict: 
+                if e[2] == instru:
+                    if not self.updateBL:
+                        rect = pygame.Rect(e[1]*self.blockSize-self.decalage, e[0]*self.blockSize, self.blockSize, self.blockSize)
+                        self.screen.blit(self.briqueimg[self.instruDict[instru][0]],rect)
+                    else:
+                        rect = pygame.Rect(e[1]*self.blockSize, e[0]*self.blockSize, self.blockSize, self.blockSize)
+                        self.blockRECT[instru].append(rect)
+                      
         self.updateBL = False
 
 
@@ -308,17 +301,26 @@ class World:
             self.decalage -=5
             self.players['Mario.png'].decalage -=5
 
+    def on_est_ou(self):
+        if self.position == 'monde':
+            self.screen.fill('black')
+        elif self.position == 'niveau':
+            pass
+        elif self.position == 'jeu':
+            self.screen.fill('black')
+            self.inputs()
+            self.scrolling()
+            self.draw_on_screen()
+            for personnage in self.players:
+                self.players[personnage].update()
+            for monstres in self.monstre:
+                self.monstre[monstres].update()
+
 
 
     def update(self):
-        self.screen.fill("black")
-        self.inputs()
-        self.scrolling()
-        self.draw_on_screen()
-        for personnage in self.players:
-            self.players[personnage].update()
-        for monstres in self.monstre:
-            self.monstre[monstres].update()
+        self.on_est_ou()
+        
         
 jeu = Jeu()
 while True :
