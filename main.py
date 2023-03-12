@@ -155,7 +155,7 @@ class Entity:
         self.rect.midbottom = self.pos
         for e in self.blockRECT.values():
             for i in e :
-                if pygame.Rect.colliderect(self.rect, i) == True:
+                if pygame.Rect.colliderect(self.rect, i[0]):
                     collide = True
         self.pos += [-x,-y]
         self.rect.midbottom = self.pos
@@ -212,7 +212,7 @@ class World:
                 if e[2] == instru:
                     rect = pygame.Rect(e[1]*self.blockSize-self.decalage, e[0]*self.blockSize, self.blockSize, self.blockSize)
                     if self.instruDict[instru][1]:
-                        self.blockRECT[instru].append(rect)
+                        self.blockRECT[instru].append((rect,instru))
         
         for name in os.listdir('assets/players'):
             self.players[name] = Entity(self.screen,self.blockRECT,name,True)
@@ -232,7 +232,6 @@ class World:
             c = 0
             chaineCAr = ""
             for lettre in i:
-                print(lettre)
                 if c == 0:
                     self.instruDict[i[0]] = []
                     c = 1
@@ -248,6 +247,8 @@ class World:
                             chaineCAr = True
                         elif chaineCAr == 'False':
                             chaineCAr = False
+                        elif chaineCAr == 'None':
+                            chaineCAr = None
                         self.instruDict[i[0]].append(chaineCAr)
                         chaineCAr = ''
                         if lettre == ']':
@@ -276,7 +277,7 @@ class World:
                         self.screen.blit(self.briqueimg[self.instruDict[instru][0]],rect)
                     else:
                         rect = pygame.Rect(e[1]*self.blockSize, e[0]*self.blockSize, self.blockSize, self.blockSize)
-                        self.blockRECT[instru].append(rect)
+                        self.blockRECT[instru].append((rect,instru))
                       
         self.updateBL = False
 

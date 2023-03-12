@@ -1,2 +1,3 @@
-#:[brique.png,True]
+#:[brique.png,True,False,None,False,1,1]
+?:[surprise.png,True,True,surprise_vide.png,False,1,1]
 
