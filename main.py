@@ -194,8 +194,9 @@ class World:
         self.players = {}
         self.instruDict = {}
         self.monstre = {}
-        self.position = 'jeu'
+        self.position = 'monde'
         self.dicoInstru(self.get_txt('block'))
+        self.font = pygame.font.SysFont('Arial',32)
         
         for name in os.listdir('assets/world'):
             self.briqueimgOrigignal[name] = pygame.transform.scale(pygame.image.load('assets/world/{}'.format(name)),(self.blockSize,self.blockSize))
@@ -300,12 +301,27 @@ class World:
         if keys[pygame.K_q]:
             self.decalage -=5
             self.players['Mario.png'].decalage -=5
+        
+    def inputsMouse(self):
+        self.Mpos = pygame.mouse.get_pos()
+        self.mouseDown = pygame.mouse.get_pressed()
 
     def on_est_ou(self):
         if self.position == 'monde':
             self.screen.fill('black')
+            monde = self.font.render("monde1",True,(255,255,255))
+            monderect = monde.get_rect()
+            if monderect.left <= self.Mpos[0] <= monderect.right and monderect.top <= self.Mpos[1] <= monderect.bottom and self.mouseDown[0]:
+                self.position = 'niveau'
+            self.screen.blit(monde,monderect)
         elif self.position == 'niveau':
-            pass
+            self.screen.fill('black')
+            niveau = self.font.render("niveau1",True,(255,255,255))
+            niveaurect = niveau.get_rect()
+            niveaurect.y = 50
+            if niveaurect.left <= self.Mpos[0] <= niveaurect.right and niveaurect.top <= self.Mpos[1] <= niveaurect.bottom and self.mouseDown[0]:
+                self.position = 'jeu'
+            self.screen.blit(niveau,niveaurect)
         elif self.position == 'jeu':
             self.screen.fill('black')
             self.inputs()
@@ -319,6 +335,7 @@ class World:
 
 
     def update(self):
+        self.inputsMouse()
         self.on_est_ou()
         
         
