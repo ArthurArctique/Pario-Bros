@@ -8,9 +8,8 @@ pygame.init()
 vec = pygame.math.Vector2
 
 class Menu:
-    def __init__(self) -> None:
-        self.width , self.height = get_monitors()[0].width * 0.75,get_monitors()[0].height * 0.75
-        self.screen = pygame.display.set_mode((self.width,self.height))
+    def __init__(self,screen) -> None:
+        self.screen = screen
         self.font = pygame.font.SysFont('Arial', 32)
         self.fullscreen = False
         self.etat = True
@@ -22,7 +21,8 @@ class Menu:
         elif self.position == 'optionRes':
             self.optionRes()
         elif self.position == 'jouer':
-            self.etat = False
+            jeu.classPos = ''
+            jeu.position = 'monde'
    
     def main(self):
         self.screen.fill('black')
@@ -50,6 +50,22 @@ class Menu:
     
     def optionRes(self):
         self.screen.fill('blue') # elle est pour toi celle la Maelan 
+        l = [0.25,0.5,0.75,'fullscreen','retour']
+        c = 0
+        for i in l:
+            image = self.font.render(str(i),True,(255,255,255))
+            imagerect = image.get_rect()
+            imagerect.y = imagerect.bottom * c 
+            if imagerect.left <= pygame.mouse.get_pos()[0] <= imagerect.right and imagerect.top <= pygame.mouse.get_pos()[1] <= imagerect.bottom and pygame.mouse.get_pressed()[0]:
+                if i != 'fullscreen' and i != 'retour':
+                    self.width , self.height = get_monitors()[0].width * i ,get_monitors()[0].height * i
+                    self.screen = pygame.display.set_mode((self.width, self.height))
+                elif i == 'retour':
+                    self.position = 'main'
+                else:
+                    self.screen = pygame.display.set_mode((0,0),FULLSCREEN)
+            self.screen.blit(image,imagerect)
+            c += 1
 
     def update(self):
         self.on_est_ou()
@@ -57,10 +73,17 @@ class Menu:
 
 class Jeu:
     def __init__(self) -> None:
-        self.etat = False
-        self.menu = Menu()
+        self.width , self.height = get_monitors()[0].width * 0.75,get_monitors()[0].height * 0.75
+        self.screen = pygame.display.set_mode((self.width,self.height))
+        self.classDict = {'menu' : Menu(self.screen),'monde' : None}
+        self.font = pygame.font.SysFont('Arial', 32)
         self.clock = pygame.time.Clock()
-        self.world = World(self.menu.screen)
+        self.listeMondes = {'plains' : os.listdir('plains') } #,'desert' : os.listdir('desert')}
+        self.position = ''
+        self.classPos = 'menu'
+        self.monde = ''
+        self.lance = False
+        self.niveau = False
         
     
     def inputs(self):
@@ -68,12 +91,43 @@ class Jeu:
             if event.type == pygame.QUIT:
                 pygame.quit()
                 exit()
+        
+    def window_world(self):
+        self.screen.fill('black')
+        c = 0
+        for monde in self.listeMondes:
+            mondetxt = self.font.render(f"{monde}",True,(255,255,255))
+            monderect = mondetxt.get_rect()
+            monderect.y = monderect.height * c
+            if monderect.left <= pygame.mouse.get_pos()[0] <= monderect.right and monderect.top <= pygame.mouse.get_pos()[1] <= monderect.bottom and pygame.mouse.get_pressed()[0]:
+                self.position = 'niveau'
+                self.monde = monde
+            self.screen.blit(mondetxt,monderect)
+            c += 1
+    
+    def window_niveau(self):
+        self.screen.fill('black')
+        for niveau in self.listeMondes[self.monde]:
+            niveautxt = self.font.render(f"{niveau}",True,(255,255,255))
+            niveaurect = niveautxt.get_rect()
+            niveaurect.y = 50
+            if niveaurect.left <= pygame.mouse.get_pos()[0] <= niveaurect.right and niveaurect.top <= pygame.mouse.get_pos()[1] <= niveaurect.bottom and pygame.mouse.get_pressed()[0]:
+                self.classDict['monde'] = World(self.screen,f'{self.monde}/{niveau}')
+                self.position = ''
+                self.classPos = 'monde'
+            self.screen.blit(niveautxt,niveaurect)
+
+    def on_est_ou(self):
+        if self.position == 'monde':
+            self.window_world()
+        elif self.position == 'niveau':
+            self.window_niveau()
+
 
     def update(self):
-        if not self.menu.etat:
-            self.world.update()
-        else:
-            self.menu.update()
+        self.on_est_ou()
+        if self.classPos != '':
+            self.classDict[self.classPos].update()
         self.inputs()
         pygame.display.flip()
         self.clock.tick(60)
@@ -85,7 +139,7 @@ class Entity:
         self.blockRECT = blockRECT
         self.playerSize = 0.04
         self.decalage = 0
-        self.speed = 4
+        self.speed = round(screen.get_size()[0] / 175)
         self.joueur = joueur
         if joueur:
             self.original = pygame.image.load('assets/players/{}'.format(name))
@@ -97,13 +151,13 @@ class Entity:
             self.speed = 3
         
         self.height, self.width = self.original.get_size()
-        self.image = pygame.transform.scale(self.original,(self.height * self.playerSize,self.width *self.playerSize))
+        self.image = pygame.transform.scale(self.original,(self.height * 0.04 ,self.width * 0.04))
         self.rect = self.image.get_rect()
         self.pos = vec((200, 0))
-        self.jumpspeed = self.screen.get_size()[1] / 30
+        self.jumpspeed = self.screen.get_size()[1] / 39
         self.speedVerti = 0
-        self.speedHori = 0
-        self.gravity = 1
+        self.speedHori = 1
+        self.gravity = round(screen.get_size()[1] / 1000) 
         self.min_jumpspeed = 4
         self.prev_key = pygame.key.get_pressed()
             
@@ -111,9 +165,14 @@ class Entity:
     def draw(self):
         self.rect.x -= self.decalage
         self.screen.blit(self.image,self.rect)
+    
+    def animation(self):
+        if self.speedHori > 0:
+            self.image = pygame.transform.scale(self.original,(self.height * self.playerSize,self.width *self.playerSize))
+        else:
+            self.image = pygame.transform.scale(pygame.transform.flip(self.original, 1, 0),(self.height * self.playerSize,self.width *self.playerSize))
 
-
-    def updateTuto(self):
+    def deplacement(self):
         self.speedHori *= 0.88
         onground = self.check_collision(0, 1)
         # check keys
@@ -135,7 +194,7 @@ class Entity:
 
         # gravity
         if self.speedVerti < 10 and not onground:  # 9.8 rounded up
-            self.speedVerti += self.gravity
+            self.speedVerti += self.gravity 
 
         if onground and self.speedVerti > 0:
             self.speedVerti = 0
@@ -177,16 +236,17 @@ class Entity:
 
     def update(self):
         self.inputs()
-        self.updateTuto()
+        self.deplacement()
+        self.animation()
         self.draw()
         
 
 class World:
-    def __init__(self,screen) -> None:
+    def __init__(self,screen,chemin) -> None:
         self.updateBL = False
-        self.width , self.height = screen.get_size()[0],screen.get_size()[1]
+        self.width , self.height = screen.get_size()
         self.screen = screen
-        self.world = self.get_txt('monde1/niveau1')
+        self.world = self.get_txt(chemin)
         self.blockSize = screen.get_size()[1]/15
         self.decalage = 0
         self.briqueimgOrigignal = {}
@@ -194,8 +254,7 @@ class World:
         self.players = {}
         self.instruDict = {}
         self.monstre = {}
-        self.position = 'monde'
-        self.dicoInstru(self.get_txt('block'))
+        self.dicoInstru(self.get_txt('block.txt'))
         self.font = pygame.font.SysFont('Arial',32)
         
         for name in os.listdir('assets/world'):
@@ -220,8 +279,8 @@ class World:
             self.monstre[name] = Entity(self.screen,self.blockRECT,name,False)
     
 
-    def get_txt(self,nom):
-        file = open(f'{nom}.txt', 'r')
+    def get_txt(self,chemin):
+        file = open(f'{chemin}', 'r')
         data = file.read()
         liste = data.split("\n")
         file.close()
@@ -266,6 +325,7 @@ class World:
 
 
     def draw_on_screen(self):
+        self.screen.fill('black')
         if self.updateBL:
             for instru in self.instruDict:
                 self.blockRECT[instru] = []
@@ -307,37 +367,16 @@ class World:
         self.Mpos = pygame.mouse.get_pos()
         self.mouseDown = pygame.mouse.get_pressed()
 
-    def on_est_ou(self):
-        if self.position == 'monde':
-            self.screen.fill('black')
-            monde = self.font.render("monde1",True,(255,255,255))
-            monderect = monde.get_rect()
-            if monderect.left <= self.Mpos[0] <= monderect.right and monderect.top <= self.Mpos[1] <= monderect.bottom and self.mouseDown[0]:
-                self.position = 'niveau'
-            self.screen.blit(monde,monderect)
-        elif self.position == 'niveau':
-            self.screen.fill('black')
-            niveau = self.font.render("niveau1",True,(255,255,255))
-            niveaurect = niveau.get_rect()
-            niveaurect.y = 50
-            if niveaurect.left <= self.Mpos[0] <= niveaurect.right and niveaurect.top <= self.Mpos[1] <= niveaurect.bottom and self.mouseDown[0]:
-                self.position = 'jeu'
-            self.screen.blit(niveau,niveaurect)
-        elif self.position == 'jeu':
-            self.screen.fill('black')
-            self.inputs()
-            self.scrolling()
-            self.draw_on_screen()
-            for personnage in self.players:
-                self.players[personnage].update()
-            for monstres in self.monstre:
-                self.monstre[monstres].update()
-
-
 
     def update(self):
         self.inputsMouse()
-        self.on_est_ou()
+        self.inputs()
+        self.scrolling()
+        self.draw_on_screen()
+        for personnage in self.players:
+            self.players[personnage].update()
+        for monstres in self.monstre:
+            self.monstre[monstres].update()
         
         
 jeu = Jeu()
