@@ -14,11 +14,14 @@ class Menu:
         self.fullscreen = False
         self.etat = True
         self.position = 'main'
-    
+        self.cooldown = 0
+        self.COOLDOWN = 30    
     def on_est_ou(self):
         if self.position == 'main':
+            self.cooldown += 1
             self.main()
         elif self.position == 'optionRes':
+            self.cooldown += 1
             self.optionRes()
         elif self.position == 'jouer':
             jeu.classPos = ''
@@ -39,10 +42,12 @@ class Menu:
         jouerRect = res.get_rect()
         jouerRect.y += resRect.height
         
-        if  resRect.x <= self.x <= resRect.width and resRect.y <= self.y <= resRect.height and pygame.mouse.get_pressed()[0]:
+        if  resRect.x <= self.x <= resRect.width and resRect.y <= self.y <= resRect.height and pygame.mouse.get_pressed()[0] and self.cooldown > self.COOLDOWN:
             self.position = 'optionRes'
-        if  jouerRect.left <= self.x <= jouerRect.right and jouerRect.y <= self.y <= jouerRect.bottom and pygame.mouse.get_pressed()[0]:
+            self.cooldown = 0
+        if  jouerRect.left <= self.x <= jouerRect.right and jouerRect.y <= self.y <= jouerRect.bottom and pygame.mouse.get_pressed()[0] and self.cooldown > self.COOLDOWN:
             self.position = 'jouer'
+            self.cooldown = 0
         
         
         self.screen.blit(res,resRect)
@@ -53,10 +58,14 @@ class Menu:
         l = [0.25,0.5,0.75,'fullscreen','retour']
         c = 0
         for i in l:
-            image = self.font.render(str(i),True,(255,255,255))
+            if i != 'fullscreen' and i != 'retour':
+                image = self.font.render(str(get_monitors()[0].width * i)+'x' + str(get_monitors()[0].height * i),True,(255,255,255))
+            else:
+                image = self.font.render(str(i),True,(255,255,255))
             imagerect = image.get_rect()
             imagerect.y = imagerect.bottom * c 
-            if imagerect.left <= pygame.mouse.get_pos()[0] <= imagerect.right and imagerect.top <= pygame.mouse.get_pos()[1] <= imagerect.bottom and pygame.mouse.get_pressed()[0]:
+            if imagerect.left <= pygame.mouse.get_pos()[0] <= imagerect.right and imagerect.top <= pygame.mouse.get_pos()[1] <= imagerect.bottom and pygame.mouse.get_pressed()[0] and self.cooldown > self.COOLDOWN:
+                self.cooldown = 0
                 if i != 'fullscreen' and i != 'retour':
                     self.width , self.height = get_monitors()[0].width * i ,get_monitors()[0].height * i
                     self.screen = pygame.display.set_mode((self.width, self.height))
@@ -82,8 +91,8 @@ class Jeu:
         self.position = ''
         self.classPos = 'menu'
         self.monde = ''
-        self.lance = False
-        self.niveau = False
+        self.cooldown = 0
+        self.COOLDOWN = 15
         
     
     def inputs(self):
@@ -99,7 +108,8 @@ class Jeu:
             mondetxt = self.font.render(f"{monde}",True,(255,255,255))
             monderect = mondetxt.get_rect()
             monderect.y = monderect.height * c
-            if monderect.left <= pygame.mouse.get_pos()[0] <= monderect.right and monderect.top <= pygame.mouse.get_pos()[1] <= monderect.bottom and pygame.mouse.get_pressed()[0]:
+            if monderect.left <= pygame.mouse.get_pos()[0] <= monderect.right and monderect.top <= pygame.mouse.get_pos()[1] <= monderect.bottom and pygame.mouse.get_pressed()[0]  and self.cooldown > self.COOLDOWN:
+                self.cooldown = 0
                 self.position = 'niveau'
                 self.monde = monde
             self.screen.blit(mondetxt,monderect)
@@ -107,20 +117,25 @@ class Jeu:
     
     def window_niveau(self):
         self.screen.fill('black')
+        c = 0
         for niveau in self.listeMondes[self.monde]:
             niveautxt = self.font.render(f"{niveau}",True,(255,255,255))
             niveaurect = niveautxt.get_rect()
-            niveaurect.y = 50
-            if niveaurect.left <= pygame.mouse.get_pos()[0] <= niveaurect.right and niveaurect.top <= pygame.mouse.get_pos()[1] <= niveaurect.bottom and pygame.mouse.get_pressed()[0]:
+            niveaurect.y = niveaurect.height * c
+            if niveaurect.left <= pygame.mouse.get_pos()[0] <= niveaurect.right and niveaurect.top <= pygame.mouse.get_pos()[1] <= niveaurect.bottom and pygame.mouse.get_pressed()[0] and self.cooldown > self.COOLDOWN:
+                self.cooldown = 0
                 self.classDict['monde'] = World(self.screen,f'{self.monde}/{niveau}')
                 self.position = ''
                 self.classPos = 'monde'
             self.screen.blit(niveautxt,niveaurect)
+            c += 1
 
     def on_est_ou(self):
         if self.position == 'monde':
+            self.cooldown += 1
             self.window_world()
         elif self.position == 'niveau':
+            self.cooldown += 1
             self.window_niveau()
 
 
@@ -154,10 +169,10 @@ class Entity:
         self.image = pygame.transform.scale(self.original,(self.height * 0.04 ,self.width * 0.04))
         self.rect = self.image.get_rect()
         self.pos = vec((200, 0))
-        self.jumpspeed = self.screen.get_size()[1] / 39
+        self.jumpspeed = self.screen.get_size()[1] / 36
         self.speedVerti = 0
-        self.speedHori = 1
-        self.gravity = round(screen.get_size()[1] / 1000) 
+        self.speedHori = 0
+        self.gravity = 1
         self.min_jumpspeed = 4
         self.prev_key = pygame.key.get_pressed()
             
@@ -193,7 +208,8 @@ class Entity:
         self.prev_key = key
 
         # gravity
-        if self.speedVerti < 10 and not onground:  # 9.8 rounded up
+
+        if not onground:  # 9.8 rounded up
             self.speedVerti += self.gravity 
 
         if onground and self.speedVerti > 0:
@@ -208,17 +224,30 @@ class Entity:
                 pygame.quit()
                 exit()
 
-    def check_collision(self, x, y):
+    def check_collision(self, x, y, general=True):
         collide = False
         self.pos += [x,y]
         self.rect.midbottom = self.pos
         for e in self.blockRECT.values():
             for i in e :
                 if pygame.Rect.colliderect(self.rect, i[0]):
+                    if general != False:
+                        self.collideBlockMystere(i)
                     collide = True
         self.pos += [-x,-y]
         self.rect.midbottom = self.pos
         return collide
+    
+    
+    def collideBlockMystere(self,bloc):
+        if bloc[1] == '?' and self.speedVerti <0 and self.check_collision(0,-1,False):
+            liste = jeu.classDict['monde'].blockRECT["?"]
+            for i in range(len(liste)) :
+                if liste[i][0] == bloc[0]:
+                    jeu.classDict['monde'].blockRECT["?"][i][1] = "0"
+                    print("1")
+            
+        
     
     def move(self,x,y):
         dx = x
@@ -263,15 +292,8 @@ class World:
 
         self.liste = []
         self.elementIntoListe()
-        self.blockRECT = {}
-        for i in self.instruDict:
-            self.blockRECT[i] = []
-        for e in self.liste:
-            for instru in self.instruDict:
-                if e[2] == instru:
-                    rect = pygame.Rect(e[1]*self.blockSize-self.decalage, e[0]*self.blockSize, self.blockSize, self.blockSize)
-                    if self.instruDict[instru][1]:
-                        self.blockRECT[instru].append((rect,instru))
+        
+        self.initialiseDicoBloc()
         
         for name in os.listdir('assets/players'):
             self.players[name] = Entity(self.screen,self.blockRECT,name,True)
@@ -285,6 +307,17 @@ class World:
         liste = data.split("\n")
         file.close()
         return liste
+    
+    def initialiseDicoBloc(self):
+        self.blockRECT = {}
+        for i in self.instruDict:
+            self.blockRECT[i] = []
+        for e in self.liste:
+            for instru in self.instruDict:
+                if e[2] == instru:
+                    rect = pygame.Rect(e[1]*self.blockSize-self.decalage, e[0]*self.blockSize, self.blockSize, self.blockSize)
+                    if self.instruDict[instru][1]:
+                        self.blockRECT[instru].append([rect,instru])
     
     def dicoInstru(self,liste):
         for i in liste:
@@ -326,20 +359,16 @@ class World:
 
     def draw_on_screen(self):
         self.screen.fill('black')
-        if self.updateBL:
-            for instru in self.instruDict:
-                self.blockRECT[instru] = []
-        for e in self.liste:  
-            for instru in self.instruDict: 
-                if e[2] == instru:
-                    if not self.updateBL:
-                        rect = pygame.Rect(e[1]*self.blockSize-self.decalage, e[0]*self.blockSize, self.blockSize, self.blockSize)
-                        self.screen.blit(self.briqueimg[self.instruDict[instru][0]],rect)
-                    else:
-                        rect = pygame.Rect(e[1]*self.blockSize, e[0]*self.blockSize, self.blockSize, self.blockSize)
-                        self.blockRECT[instru].append((rect,instru))
+        
+        # Je sais pas ce que t'as foutu mais tu refaisais au moins 2 fois la boucle d'affichage alors qu'on stocke deja tout
+        # Dans self.blockRECT dès le init donc pas besoin de refaire le dico à chaque fois 
+        
+        for keys in self.blockRECT :
+            for i in self.blockRECT[keys]:
+                rect = pygame.Rect(i[0][0]-self.decalage, i[0][1], self.blockSize, self.blockSize)
+                self.screen.blit(self.briqueimg[self.instruDict[i[1]][0]],rect)
+
                       
-        self.updateBL = False
 
 
     def scrolling(self):
