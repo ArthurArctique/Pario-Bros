@@ -92,7 +92,7 @@ class Jeu:
         self.classPos = 'menu'
         self.monde = ''
         self.cooldown = 0
-        self.COOLDOWN = 15
+        self.COOLDOWN = 5
         
     
     def inputs(self):
@@ -152,9 +152,9 @@ class Entity:
         self.qJump = 1
         self.screen = screen
         self.blockRECT = blockRECT
-        self.playerSize = 0.04
+        self.playerSize = self.screen.get_size()[0] * 0.000035
         self.decalage = 0
-        self.speed = round(screen.get_size()[0] / 175)
+        self.speed = round(screen.get_size()[0] * 0.006)
         self.joueur = joueur
         if joueur:
             self.original = pygame.image.load('assets/players/{}'.format(name))
@@ -166,13 +166,14 @@ class Entity:
             self.speed = 3
         
         self.height, self.width = self.original.get_size()
-        self.image = pygame.transform.scale(self.original,(self.height * 0.04 ,self.width * 0.04))
+        self.image = pygame.transform.scale(self.original,(self.height * self.playerSize ,self.width * self.playerSize))
         self.rect = self.image.get_rect()
         self.pos = vec((200, 0))
-        self.jumpspeed = self.screen.get_size()[1] / 36
+        self.jumpspeed = self.screen.get_size()[1] * 0.031
         self.speedVerti = 0
         self.speedHori = 0
-        self.gravity = 1
+        self.gravity = self.screen.get_size()[1] * 0.0015
+        print(self.gravity)
         self.min_jumpspeed = 4
         self.prev_key = pygame.key.get_pressed()
             
