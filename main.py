@@ -319,6 +319,12 @@ class World:
                     rect = pygame.Rect(e[1]*self.blockSize-self.decalage, e[0]*self.blockSize, self.blockSize, self.blockSize)
                     if self.instruDict[instru][1]:
                         self.blockRECT[instru].append([rect,instru])
+
+    def mort(self):
+        for i in self.players:
+            if self.players[i].rect.y >= self.screen.get_size()[1]:
+                jeu.position = 'niveau'
+                jeu.classPos = ''
     
     def dicoInstru(self,liste):
         for i in liste:
@@ -399,6 +405,7 @@ class World:
 
 
     def update(self):
+        self.mort()
         self.inputsMouse()
         self.inputs()
         self.scrolling()
