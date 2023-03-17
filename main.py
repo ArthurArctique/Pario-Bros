@@ -25,7 +25,7 @@ class Menu:
             self.optionRes()
         elif self.position == 'jouer':
             jeu.classPos = ''
-            jeu.position = 'monde'
+            jeu.position = 'saves'
    
     def main(self):
         self.screen.fill('black')
@@ -76,6 +76,7 @@ class Menu:
             self.screen.blit(image,imagerect)
             c += 1
 
+
     def update(self):
         self.on_est_ou()
         pygame.display.flip()
@@ -92,7 +93,9 @@ class Jeu:
         self.classPos = 'menu'
         self.monde = ''
         self.cooldown = 0
-        self.COOLDOWN = 5
+        self.COOLDOWN = 10
+        self.joueur = {}
+        self.cSauv = 0
         
     
     def inputs(self):
@@ -124,14 +127,58 @@ class Jeu:
             niveaurect.y = niveaurect.height * c
             if niveaurect.left <= pygame.mouse.get_pos()[0] <= niveaurect.right and niveaurect.top <= pygame.mouse.get_pos()[1] <= niveaurect.bottom and pygame.mouse.get_pressed()[0] and self.cooldown > self.COOLDOWN:
                 self.cooldown = 0
-                self.classDict['monde'] = World(self.screen,f'{self.monde}/{niveau}')
+                self.classDict['monde'] = World(self.screen,f'{self.monde}/{niveau}',f'sauvegardes/save{self.cSauv}.txt')
                 self.position = ''
                 self.classPos = 'monde'
             self.screen.blit(niveautxt,niveaurect)
             c += 1
+    
+    def saves(self):
+        self.screen.fill('black')
+        sauvListe = os.listdir('sauvegardes')
+        for i in range(3):
+            sauvListe.append(None)
+        sauvListe = sauvListe[:3]
+        c = 0
+        for saves in sauvListe:
+            savetxt = self.font.render(str(saves),True,(255,255,255))
+            saveRect = savetxt.get_rect()
+            saveRect.y = saveRect.height * c
+            if saveRect.left < pygame.mouse.get_pos()[0] < saveRect.right and saveRect.top < pygame.mouse.get_pos()[1] < saveRect.bottom and pygame.mouse.get_pressed()[0] and self.cooldown > self.COOLDOWN:
+                self.cooldown = 0
+                if saves != None:
+                    self.position = 'monde'
+                    self.cSauv = c + 1
+                else:
+                    self.position = 'nbJoueurs'
+                    self.cSauv = c + 1
+            self.screen.blit(savetxt,saveRect)
+            c += 1
+
+    def nouvelle_sauvegarde(self,nbJoueurs):
+        with open(f"sauvegardes/save{self.cSauv}.txt", "w") as save:
+            save.write(f'M:[plain]\nN:[plains-1]\nJ:{[None]*nbJoueurs}')
+    
+    def nbJoueurs(self):
+        self.screen.fill('black')
+        for i in range(1,5):
+            itxt = self.font.render(str(i),True,(255,255,255))
+            iRect = itxt.get_rect()
+            iRect.y = iRect.height * (i-1)
+            if iRect.left < pygame.mouse.get_pos()[0] < iRect.right and iRect.top < pygame.mouse.get_pos()[1] < iRect.bottom and pygame.mouse.get_pressed()[0] and self.cooldown > self.COOLDOWN:
+                self.nouvelle_sauvegarde(i)
+                self.position = 'monde'
+            self.screen.blit(itxt,iRect)
+
 
     def on_est_ou(self):
-        if self.position == 'monde':
+        if self.position == 'saves':
+            self.cooldown += 1
+            self.saves()
+        elif self.position == 'nbJoueurs':
+            self.cooldown += 1
+            self.nbJoueurs()
+        elif self.position == 'monde':
             self.cooldown += 1
             self.window_world()
         elif self.position == 'niveau':
@@ -152,9 +199,9 @@ class Entity:
         self.qJump = 1
         self.screen = screen
         self.blockRECT = blockRECT
-        self.playerSize = self.screen.get_size()[0] * 0.000035
+        self.playerSize = self.screen.get_size()[0] * 0.00003
         self.decalage = 0
-        self.speed = round(screen.get_size()[0] * 0.006)
+        self.speed = round(screen.get_size()[0] * 0.006) 
         self.joueur = joueur
         if joueur:
             self.original = pygame.image.load('assets/players/{}'.format(name))
@@ -180,6 +227,13 @@ class Entity:
 
     def draw(self):
         self.rect.x -= self.decalage
+        
+        rect2 = self.rect.copy()
+        rect2[2] /= 2
+        pygame.draw.rect(self.screen, "blue", rect2,5)
+        
+        
+        pygame.draw.rect(self.screen, "red", self.rect,5)
         self.screen.blit(self.image,self.rect)
     
     def animation(self):
@@ -190,7 +244,7 @@ class Entity:
 
     def deplacement(self):
         self.speedHori *= 0.88
-        onground = self.check_collision(0, 1)
+        onground = self.check_collision(0, 1)[0]
         # check keys
         key = pygame.key.get_pressed()
         if key[pygame.K_LEFT] and self.joueur:
@@ -219,60 +273,87 @@ class Entity:
         # movement
         self.move(self.speedHori, self.speedVerti)
 
-    def inputs(self):
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                exit()
-
-    def check_collision(self, x, y, general=True):
+    def check_collision(self, x, y, general=True , plusPetit = False):
         collide = False
+
         self.pos += [x,y]
         self.rect.midbottom = self.pos
+        blocsPrincip = []
         for e in self.blockRECT.values():
             for i in e :
-                if pygame.Rect.colliderect(self.rect, i[0]):
-                    if general != False:
-                        self.collideBlockMystere(i)
-                    collide = True
+                
+                if not plusPetit:
+                    
+                    if pygame.Rect.colliderect(self.rect, i[0]):
+                        if general != False:
+                            self.collideBlockSpe(i,'?',True,"0")
+                        collide = True
+                        blocsPrincip.append(i)
+                else:
+                    rect2 = self.rect.copy()
+                    rect2[2] /= 2
+                    if pygame.Rect.colliderect(rect2, i[0]):
+                        if general != False:
+                            self.collideBlockSpe(i,'?',True,"0")
+                        collide = True
+                        blocsPrincip.append(i)
+                    
+                    
         self.pos += [-x,-y]
         self.rect.midbottom = self.pos
-        return collide
-    
-    
-    def collideBlockMystere(self,bloc):
-        if bloc[1] == '?' and self.speedVerti <0 and self.check_collision(0,-1,False):
-            liste = jeu.classDict['monde'].blockRECT["?"]
-            for i in range(len(liste)) :
-                if liste[i][0] == bloc[0]:
-                    jeu.classDict['monde'].blockRECT["?"][i][1] = "0"
-                    print("1")
+        
+
             
+        
+        return (collide,blocsPrincip)            # enlever bP
+    
+    
+    def collideBlockSpe(self,bloc,symbole,doitChanger,changement=""):         # a terminer pou verfier qu'on touche QUE le bloc mys
+        if self.speedHori > 0:
+            coll = self.check_collision(-7,-1,False)
+        else:
+            coll = self.check_collision(7,-1,False)
+            
+    
+        
+        if bloc[1] == symbole and self.speedVerti < 0 and coll[0] and not self.check_collision(0, -1, False , True)[0]:
+            if doitChanger:
+                liste = jeu.classDict['monde'].blockRECT[symbole]
+                for i in range(len(liste)) :
+                    if liste[i][0] == bloc[0]:
+                        jeu.classDict['monde'].blockRECT[symbole][i][1] = changement
+            return True
+        else:
+            return False
+            
+                    
         
     
     def move(self,x,y):
         dx = x
         dy = y
         
-        while self.check_collision(0, dy):
+        while self.check_collision(0, dy)[0]:
             dy -= numpy.sign(dy)
 
-        while self.check_collision(dx, dy):
+        while self.check_collision(dx, dy)[0]:
             dx -= numpy.sign(dx)
         
         self.pos += [dx,dy]
 
         self.rect.midbottom = self.pos
+        
+        if self.check_collision(0, -1)[0]:
+            self.speedVerti = 0
 
     def update(self):
-        self.inputs()
         self.deplacement()
         self.animation()
         self.draw()
         
 
 class World:
-    def __init__(self,screen,chemin) -> None:
+    def __init__(self,screen,chemin,sauv) -> None:
         self.updateBL = False
         self.width , self.height = screen.get_size()
         self.screen = screen
@@ -282,9 +363,10 @@ class World:
         self.briqueimgOrigignal = {}
         self.briqueimg = {}
         self.players = {}
-        self.instruDict = {}
+        self.instruDict = self.dicoInstru(self.get_txt('block.txt'))
+        self.sauvegarde = self.dicoInstru(self.get_txt(sauv))
+        print(self.sauvegarde)
         self.monstre = {}
-        self.dicoInstru(self.get_txt('block.txt'))
         self.font = pygame.font.SysFont('Arial',32)
         
         for name in os.listdir('assets/world'):
@@ -327,12 +409,13 @@ class World:
                 jeu.classPos = ''
     
     def dicoInstru(self,liste):
+        dict_ = {}
         for i in liste:
             c = 0
             chaineCAr = ""
             for lettre in i:
                 if c == 0:
-                    self.instruDict[i[0]] = []
+                    dict_[i[0]] = []
                     c = 1
                     continue
                 else:
@@ -346,12 +429,13 @@ class World:
                             chaineCAr = True
                         elif chaineCAr == 'False':
                             chaineCAr = False
-                        elif chaineCAr == 'None':
+                        elif chaineCAr == 'None' or chaineCAr == ' None':
                             chaineCAr = None
-                        self.instruDict[i[0]].append(chaineCAr)
+                        dict_[i[0]].append(chaineCAr)
                         chaineCAr = ''
                         if lettre == ']':
                             break
+        return dict_
         
 
     
@@ -366,10 +450,6 @@ class World:
 
     def draw_on_screen(self):
         self.screen.fill('black')
-        
-        # Je sais pas ce que t'as foutu mais tu refaisais au moins 2 fois la boucle d'affichage alors qu'on stocke deja tout
-        # Dans self.blockRECT dès le init donc pas besoin de refaire le dico à chaque fois 
-        
         for keys in self.blockRECT :
             for i in self.blockRECT[keys]:
                 rect = pygame.Rect(i[0][0]-self.decalage, i[0][1], self.blockSize, self.blockSize)
