@@ -127,7 +127,6 @@ class Jeu:
             niveaurect.y = niveaurect.height * c
             if niveaurect.left <= pygame.mouse.get_pos()[0] <= niveaurect.right and niveaurect.top <= pygame.mouse.get_pos()[1] <= niveaurect.bottom and pygame.mouse.get_pressed()[0] and self.cooldown > self.COOLDOWN:
                 self.cooldown = 0
-                print(self.monde)
                 self.classDict['monde'] = World(self.screen,f'{self.monde}/{niveau}',f'sauvegardes/save{self.cSauv}.txt')
                 self.position = ''
                 self.classPos = 'monde'
@@ -155,9 +154,9 @@ class Jeu:
             self.screen.blit(savetxt,saveRect)
             c += 1
 
-    def nouvelle_sauvegarde(self,nbJoueurs):
+    def nouvelle_sauvegarde(self,mondes : list,niveaux : list,vies : list,score : int,pieces : int):
         with open(f"sauvegardes/save{self.cSauv}.txt", "w") as save:
-            save.write(f'M:[plain]\nN:[plains-1]\nJ:{[5]*nbJoueurs}')
+            save.write(f'M:{mondes}\nN:{niveaux}\nV:{vies}\nS:{score}\nP:{pieces}\n')
     
     def nbJoueurs(self):
         self.screen.fill('black')
@@ -166,7 +165,7 @@ class Jeu:
             iRect = itxt.get_rect()
             iRect.y = iRect.height * (i-1)
             if iRect.left < pygame.mouse.get_pos()[0] < iRect.right and iRect.top < pygame.mouse.get_pos()[1] < iRect.bottom and pygame.mouse.get_pressed()[0] and self.cooldown > self.COOLDOWN:
-                self.nouvelle_sauvegarde(i)
+                self.nouvelle_sauvegarde(['plains'],['plains-1'],[5]*4,[0],[0])
                 self.position = 'monde'
             self.screen.blit(itxt,iRect)
 
@@ -230,10 +229,10 @@ class Entity:
         
         rect2 = self.rect.copy()
         rect2[2] /= 2
-        pygame.draw.rect(self.screen, "blue", rect2,5)
+        #pygame.draw.rect(self.screen, "blue", rect2,5)
         
         
-        pygame.draw.rect(self.screen, "red", self.rect,5)
+        #pygame.draw.rect(self.screen, "red", self.rect,5)
         self.screen.blit(self.image,self.rect)
     
     def animation(self):
@@ -365,7 +364,7 @@ class World:
         self.players = {}
         self.instruDict = self.dicoInstru(self.get_txt('block.txt'))
         self.sauvegarde = self.dicoInstru(self.get_txt(sauv))
-        print(self.sauvegarde)
+        self.sauv = sauv
         self.monstre = {}
         self.font = pygame.font.SysFont('Arial',32)
         
@@ -403,10 +402,14 @@ class World:
                         self.blockRECT[instru].append([rect,instru])
 
     def mort(self):
+        c = 0
         for i in self.players:
             if self.players[i].rect.y >= self.screen.get_size()[1]:
+                self.sauvegarde['V'][c] -= 1
+                self.save()
                 jeu.position = 'niveau'
                 jeu.classPos = ''
+            c+=1
     
     def dicoInstru(self,liste):
         dict_ = {}
@@ -421,7 +424,7 @@ class World:
                 else:
                     if lettre == '[':
                         continue
-                    elif lettre != ',' and lettre != ']' and lettre != ':' and lettre != '':
+                    elif lettre != ',' and lettre != ']' and lettre != ':' and lettre != '' and lettre != '"' and lettre != "'":
                         chaineCAr = chaineCAr + lettre
                     if lettre == ']' or lettre == ',':
                         
@@ -431,6 +434,8 @@ class World:
                             chaineCAr = False
                         elif chaineCAr == 'None' or chaineCAr == ' None':
                             chaineCAr = None
+                        elif chaineCAr.isdigit() or chaineCAr[1:].isdigit():
+                            chaineCAr = int(chaineCAr)
                         dict_[i[0]].append(chaineCAr)
                         chaineCAr = ''
                         if lettre == ']':
@@ -459,12 +464,15 @@ class World:
 
 
     def scrolling(self):
+        """
+        C'est mieux un scrolling centré en vrai ? 
+        """
         for name in self.players:
-            if self.players[name].rect.x-self.players[name].decalage >= self.width*0.75-self.decalage:     
+            if self.players[name].rect.x-self.players[name].decalage >= self.width*0.51-self.decalage:     
                 self.decalage += self.players[name].speedHori
                 self.players[name].decalage = self.decalage
 
-            if self.players[name].rect.x-self.players[name].decalage <= self.width*0.25-self.decalage and self.decalage>0:     
+            if self.players[name].rect.x-self.players[name].decalage <= self.width*0.49-self.decalage and self.decalage>0:     
                 self.decalage += self.players[name].speedHori
                 self.players[name].decalage = self.decalage
             
@@ -482,6 +490,12 @@ class World:
     def inputsMouse(self):
         self.Mpos = pygame.mouse.get_pos()
         self.mouseDown = pygame.mouse.get_pressed()
+    
+    def save(self):
+        os.remove(self.sauv)
+        lVal = list(self.sauvegarde.values())
+        print(lVal)
+        jeu.nouvelle_sauvegarde(lVal[0],lVal[1],lVal[2],lVal[3],lVal[4])
 
 
     def update(self):
