@@ -127,6 +127,7 @@ class Jeu:
             niveaurect.y = niveaurect.height * c
             if niveaurect.left <= pygame.mouse.get_pos()[0] <= niveaurect.right and niveaurect.top <= pygame.mouse.get_pos()[1] <= niveaurect.bottom and pygame.mouse.get_pressed()[0] and self.cooldown > self.COOLDOWN:
                 self.cooldown = 0
+                print(self.monde)
                 self.classDict['monde'] = World(self.screen,f'{self.monde}/{niveau}',f'sauvegardes/save{self.cSauv}.txt')
                 self.position = ''
                 self.classPos = 'monde'
@@ -135,10 +136,9 @@ class Jeu:
     
     def saves(self):
         self.screen.fill('black')
-        sauvListe = os.listdir('sauvegardes')
-        for i in range(3):
-            sauvListe.append(None)
-        sauvListe = sauvListe[:3]
+        sauvListe = [None] * 3
+        for i in os.listdir('sauvegardes'):
+            sauvListe[int(i[-5])-1] = i
         c = 0
         for saves in sauvListe:
             savetxt = self.font.render(str(saves),True,(255,255,255))
@@ -157,7 +157,7 @@ class Jeu:
 
     def nouvelle_sauvegarde(self,nbJoueurs):
         with open(f"sauvegardes/save{self.cSauv}.txt", "w") as save:
-            save.write(f'M:[plain]\nN:[plains-1]\nJ:{[None]*nbJoueurs}')
+            save.write(f'M:[plain]\nN:[plains-1]\nJ:{[5]*nbJoueurs}')
     
     def nbJoueurs(self):
         self.screen.fill('black')
