@@ -364,21 +364,23 @@ class World:
         self.width , self.height = screen.get_size()
         self.screen = screen
         self.world = self.get_txt(chemin)
-        self.blockSize = screen.get_size()[1]/15
+        self.blockSize = int(screen.get_size()[1]/15)
         self.decalage = 0
-        self.briqueimgOrigignal = {}
-        self.briqueimg = {}
+        self.imagesWorldOrigignal = {}
+        self.imagesWorld = {}
         self.players = {}
         self.instruDict = self.dicoInstru(self.get_txt('block.txt'))
         self.sauvegarde = self.dicoInstru(self.get_txt(sauv))
         self.sauv = sauv
         self.monstre = {}
         self.font = pygame.font.SysFont('Arial',32)
-        
         for name in os.listdir('assets/world'):
-            self.briqueimgOrigignal[name] = pygame.transform.scale(pygame.image.load('assets/world/{}'.format(name)),(self.blockSize,self.blockSize))
-            self.briqueimg[name] = pygame.transform.scale(pygame.image.load('assets/world/{}'.format(name)),(self.blockSize,self.blockSize))
-
+            self.imagesWorld[name] = pygame.image.load('assets/world/{}'.format(name))
+        
+        for image in self.instruDict:
+            self.imagesWorld[self.instruDict[image][0]] = pygame.transform.scale(self.imagesWorld[self.instruDict[image][0]],(self.blockSize * float(self.instruDict[image][6]), self.blockSize * float(self.instruDict[image][7])))
+            if self.instruDict[image][2]:
+                self.imagesWorld[self.instruDict[image][4]] = pygame.transform.scale(self.imagesWorld[self.instruDict[image][4]],(self.blockSize * float(self.instruDict[image][6]), self.blockSize * float(self.instruDict[image][7])))
         self.liste = []
         self.elementIntoListe()
         
@@ -404,7 +406,7 @@ class World:
         for e in self.liste:
             for instru in self.instruDict:
                 if e[2] == instru:
-                    rect = pygame.Rect(e[1]*self.blockSize-self.decalage, e[0]*self.blockSize, self.blockSize, self.blockSize)
+                    rect = pygame.Rect(e[1]* self.blockSize-self.decalage, e[0]*self.blockSize, self.blockSize * self.instruDict[instru][6], self.blockSize *  self.instruDict[instru][7])
                     if self.instruDict[instru][1]:
                         self.blockRECT[instru].append([rect,instru,self.instruDict[instru]])
 
@@ -464,9 +466,9 @@ class World:
             for i in self.blockRECT[keys]:
                 rect = pygame.Rect(i[0][0]-self.decalage, i[0][1], self.blockSize, self.blockSize)
                 if not i[2][5]:
-                    self.screen.blit(self.briqueimg[self.instruDict[i[1]][0]],rect)
+                    self.screen.blit(self.imagesWorld[self.instruDict[i[1]][0]],rect)
                 else:
-                    self.screen.blit(self.briqueimg[self.instruDict[i[1]][4]],rect)
+                    self.screen.blit(self.imagesWorld[self.instruDict[i[1]][4]],rect)
 
                       
 
