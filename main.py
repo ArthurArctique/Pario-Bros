@@ -219,7 +219,6 @@ class Entity:
         self.speedVerti = 0
         self.speedHori = 0
         self.gravity = self.screen.get_size()[1] * 0.0015
-        print(self.gravity)
         self.min_jumpspeed = 4
         self.prev_key = pygame.key.get_pressed()
             
@@ -278,22 +277,34 @@ class Entity:
         self.pos += [x,y]
         self.rect.midbottom = self.pos
         blocsPrincip = []
-        for e in self.blockRECT.values():
-            for i in e :
-                
+        for e in self.blockRECT:
+            c = -1
+            for i in self.blockRECT[e]:
+                c += 1
                 if not plusPetit:
                     
                     if pygame.Rect.colliderect(self.rect, i[0]):
                         if general != False:
-                            self.collideBlockSpe(i,'?',True,"0")
+                            if self.speedHori > 0:
+                                coll = self.check_collision(-7,-1,False)
+                            else:
+                                coll = self.check_collision(7,-1,False)
+                                
+                        
+                            if i[2][2] and not i[2][5] and self.speedVerti < 0 and coll[0] and not self.check_collision(0, -1, False , True)[0]:
+                                tempo = copy.deepcopy(i) #tout les jours fuck le systeme de pointage jsp quoi de python all my homis hate this shit heuresement que copy existe 
+                                tempo[2][5] = True
+                                self.blockRECT[e][c] = tempo
+
                         collide = True
                         blocsPrincip.append(i)
+                    
                 else:
                     rect2 = self.rect.copy()
                     rect2[2] /= 2
                     if pygame.Rect.colliderect(rect2, i[0]):
                         if general != False:
-                            self.collideBlockSpe(i,'?',True,"0")
+                            self.collideBlockSpe(i)
                         collide = True
                         blocsPrincip.append(i)
                     
@@ -307,23 +318,19 @@ class Entity:
         return (collide,blocsPrincip)            # enlever bP
     
     
-    def collideBlockSpe(self,bloc,symbole,doitChanger,changement=""):         # a terminer pou verfier qu'on touche QUE le bloc mys
-        if self.speedHori > 0:
-            coll = self.check_collision(-7,-1,False)
-        else:
-            coll = self.check_collision(7,-1,False)
-            
-    
+    def collideBlockSpe(self,bloc):         # a terminer pou verfier qu'on touche QUE le bloc mys
+        pass
+
         
-        if bloc[1] == symbole and self.speedVerti < 0 and coll[0] and not self.check_collision(0, -1, False , True)[0]:
-            if doitChanger:
+        """if doitChanger:
                 liste = jeu.classDict['monde'].blockRECT[symbole]
                 for i in range(len(liste)) :
                     if liste[i][0] == bloc[0]:
                         jeu.classDict['monde'].blockRECT[symbole][i][1] = changement
+                        print(jeu.classDict['monde'].blockRECT[symbole][i][1])
             return True
         else:
-            return False
+            return False"""
             
                     
         
@@ -399,7 +406,7 @@ class World:
                 if e[2] == instru:
                     rect = pygame.Rect(e[1]*self.blockSize-self.decalage, e[0]*self.blockSize, self.blockSize, self.blockSize)
                     if self.instruDict[instru][1]:
-                        self.blockRECT[instru].append([rect,instru])
+                        self.blockRECT[instru].append([rect,instru,self.instruDict[instru]])
 
     def mort(self):
         c = 0
@@ -441,9 +448,7 @@ class World:
                         if lettre == ']':
                             break
         return dict_
-        
-
-    
+         
     def elementIntoListe(self):
         for ligne in range(len(self.world)):
             if self.world[ligne] != '':
@@ -452,13 +457,16 @@ class World:
                         if self.world[ligne][e] == instru:
                             self.liste.append([ligne,e,instru])
 
-
     def draw_on_screen(self):
         self.screen.fill('black')
+        #print(len(self.blockRECT['?']))
         for keys in self.blockRECT :
             for i in self.blockRECT[keys]:
                 rect = pygame.Rect(i[0][0]-self.decalage, i[0][1], self.blockSize, self.blockSize)
-                self.screen.blit(self.briqueimg[self.instruDict[i[1]][0]],rect)
+                if not i[2][5]:
+                    self.screen.blit(self.briqueimg[self.instruDict[i[1]][0]],rect)
+                else:
+                    self.screen.blit(self.briqueimg[self.instruDict[i[1]][4]],rect)
 
                       
 
@@ -468,11 +476,11 @@ class World:
         C'est mieux un scrolling centré en vrai ? 
         """
         for name in self.players:
-            if self.players[name].rect.x-self.players[name].decalage >= self.width*0.51-self.decalage:     
+            if self.players[name].rect.x-self.players[name].decalage >= self.width*0.55-self.decalage:     
                 self.decalage += self.players[name].speedHori
                 self.players[name].decalage = self.decalage
 
-            if self.players[name].rect.x-self.players[name].decalage <= self.width*0.49-self.decalage and self.decalage>0:     
+            if self.players[name].rect.x-self.players[name].decalage <= self.width*0.45-self.decalage and self.decalage>0:     
                 self.decalage += self.players[name].speedHori
                 self.players[name].decalage = self.decalage
             
