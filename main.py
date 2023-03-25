@@ -156,7 +156,7 @@ class Jeu:
 
     def nouvelle_sauvegarde(self,mondes : list,niveaux : list,vies : list,score : int,pieces : int):
         with open(f"sauvegardes/save{self.cSauv}.txt", "w") as save:
-            save.write(f'M:{mondes}\nN:{niveaux}\nV:{vies}\nS:{score}\nP:{pieces}\n')
+            save.write(f'M:{mondes}\nN:{niveaux}\nV:{vies}\nS:{[score,pieces]}')
     
     def nbJoueurs(self):
         self.screen.fill('black')
@@ -165,7 +165,7 @@ class Jeu:
             iRect = itxt.get_rect()
             iRect.y = iRect.height * (i-1)
             if iRect.left < pygame.mouse.get_pos()[0] < iRect.right and iRect.top < pygame.mouse.get_pos()[1] < iRect.bottom and pygame.mouse.get_pressed()[0] and self.cooldown > self.COOLDOWN:
-                self.nouvelle_sauvegarde(['plains'],['plains-1'],[5]*4,[0],[0])
+                self.nouvelle_sauvegarde(['plains'],['plains-1'],[5]*4,0,0)
                 self.position = 'monde'
             self.screen.blit(itxt,iRect)
 
@@ -282,27 +282,38 @@ class Entity:
             for i in self.blockRECT[e]:
                 c += 1
                 if not plusPetit:
-                    
                     if pygame.Rect.colliderect(self.rect, i[0]):
-                        if general != False:
+                        tempo = copy.deepcopy(i) #tout les jours fuck le systeme de pointage jsp quoi de python all my homis hate this shit heuresement que copy existe 
+                        if i[2][8] and tempo[2][9]:
+                            print('oui')
+                            tempo[2][9] = False
+                            self.blockRECT[e][c] = tempo
+                            jeu.classDict['monde'].sauvegarde['S'][0] += 1
+                            print(jeu.classDict['monde'].sauvegarde['S'])
+                            if jeu.classDict['monde'].sauvegarde['S'][0] >= 100:
+                                jeu.classDict['monde'].sauvegarde['S'][0] = 0
+                                for index in range(len(jeu.classDict['monde'].sauvegarde['V'])):
+                                    jeu.classDict['monde'].sauvegarde['V'][index] += 1
+
+                        if general != False: # i[2][1] --> True ou False, correspond a si le bloc est sensé avoir une collision ou non
                             if self.speedHori > 0:
                                 coll = self.check_collision(-7,-1,False)
                             else:
                                 coll = self.check_collision(7,-1,False)
                                 
-                        
                             if i[2][2] and not i[2][5] and self.speedVerti < 0 and coll[0] and not self.check_collision(0, -1, False , True)[0]:
-                                tempo = copy.deepcopy(i) #tout les jours fuck le systeme de pointage jsp quoi de python all my homis hate this shit heuresement que copy existe 
                                 tempo[2][5] = True
-                                self.blockRECT[e][c] = tempo
-
-                        collide = True
-                        blocsPrincip.append(i)
+                
+                        if i[2][1]:
+                            self.blockRECT[e][c] = tempo
+                            collide = True
+                            blocsPrincip.append(i)
                     
                 else:
                     rect2 = self.rect.copy()
                     rect2[2] /= 2
                     if pygame.Rect.colliderect(rect2, i[0]):
+                        print('oui')
                         if general != False:
                             self.collideBlockSpe(i)
                         collide = True
@@ -407,8 +418,7 @@ class World:
             for instru in self.instruDict:
                 if e[2] == instru:
                     rect = pygame.Rect(e[1]* self.blockSize-self.decalage, e[0]*self.blockSize, self.blockSize * self.instruDict[instru][6], self.blockSize *  self.instruDict[instru][7])
-                    if self.instruDict[instru][1]:
-                        self.blockRECT[instru].append([rect,instru,self.instruDict[instru]])
+                    self.blockRECT[instru].append([rect,instru,self.instruDict[instru]])
 
     def mort(self):
         c = 0
@@ -445,12 +455,21 @@ class World:
                             chaineCAr = None
                         elif chaineCAr.isdigit() or chaineCAr[1:].isdigit():
                             chaineCAr = int(chaineCAr)
+                        elif self.savoirSiFloat(chaineCAr) or self.savoirSiFloat(chaineCAr[1:]):
+                            chaineCAr = float(chaineCAr)
                         dict_[i[0]].append(chaineCAr)
                         chaineCAr = ''
                         if lettre == ']':
                             break
         return dict_
          
+    def savoirSiFloat(self,elt) -> bool:
+        try:
+            float(elt)
+            return True
+        except ValueError:
+            return False
+        
     def elementIntoListe(self):
         for ligne in range(len(self.world)):
             if self.world[ligne] != '':
@@ -461,14 +480,15 @@ class World:
 
     def draw_on_screen(self):
         self.screen.fill('black')
-        #print(len(self.blockRECT['?']))
+        self.screen.blit(self.font.render(str(self.sauvegarde['S'][0]),True,(255,255,255)),(0,0))
         for keys in self.blockRECT :
             for i in self.blockRECT[keys]:
-                rect = pygame.Rect(i[0][0]-self.decalage, i[0][1], self.blockSize, self.blockSize)
-                if not i[2][5]:
-                    self.screen.blit(self.imagesWorld[self.instruDict[i[1]][0]],rect)
-                else:
-                    self.screen.blit(self.imagesWorld[self.instruDict[i[1]][4]],rect)
+                if i[2][9]:
+                    rect = pygame.Rect(i[0][0]-self.decalage, i[0][1], self.blockSize, self.blockSize)
+                    if not i[2][5]:
+                        self.screen.blit(self.imagesWorld[self.instruDict[i[1]][0]],rect)
+                    else:
+                        self.screen.blit(self.imagesWorld[self.instruDict[i[1]][4]],rect)
 
                       
 
@@ -505,7 +525,7 @@ class World:
         os.remove(self.sauv)
         lVal = list(self.sauvegarde.values())
         print(lVal)
-        jeu.nouvelle_sauvegarde(lVal[0],lVal[1],lVal[2],lVal[3],lVal[4])
+        jeu.nouvelle_sauvegarde(lVal[0],lVal[1],lVal[2],lVal[3][0],lVal[3][1])
 
 
     def update(self):
