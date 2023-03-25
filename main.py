@@ -285,11 +285,11 @@ class Entity:
                     if pygame.Rect.colliderect(self.rect, i[0]):
                         tempo = copy.deepcopy(i) #tout les jours fuck le systeme de pointage jsp quoi de python all my homis hate this shit heuresement que copy existe 
                         if i[2][8] and tempo[2][9]:
-                            print('oui')
+                            ('oui')
                             tempo[2][9] = False
                             self.blockRECT[e][c] = tempo
                             jeu.classDict['monde'].sauvegarde['S'][0] += 1
-                            print(jeu.classDict['monde'].sauvegarde['S'])
+                            (jeu.classDict['monde'].sauvegarde['S'])
                             if jeu.classDict['monde'].sauvegarde['S'][0] >= 100:
                                 jeu.classDict['monde'].sauvegarde['S'][0] = 0
                                 for index in range(len(jeu.classDict['monde'].sauvegarde['V'])):
@@ -313,7 +313,7 @@ class Entity:
                     rect2 = self.rect.copy()
                     rect2[2] /= 2
                     if pygame.Rect.colliderect(rect2, i[0]):
-                        print('oui')
+                        ('oui')
                         if general != False:
                             self.collideBlockSpe(i)
                         collide = True
@@ -338,7 +338,7 @@ class Entity:
                 for i in range(len(liste)) :
                     if liste[i][0] == bloc[0]:
                         jeu.classDict['monde'].blockRECT[symbole][i][1] = changement
-                        print(jeu.classDict['monde'].blockRECT[symbole][i][1])
+                        (jeu.classDict['monde'].blockRECT[symbole][i][1])
             return True
         else:
             return False"""
@@ -524,7 +524,7 @@ class World:
     def save(self):
         os.remove(self.sauv)
         lVal = list(self.sauvegarde.values())
-        print(lVal)
+        (lVal)
         jeu.nouvelle_sauvegarde(lVal[0],lVal[1],lVal[2],lVal[3][0],lVal[3][1])
 
 
