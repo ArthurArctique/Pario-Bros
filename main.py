@@ -96,6 +96,12 @@ class Jeu:
         self.COOLDOWN = 10
         self.joueur = {}
         self.cSauv = 0
+        self.menuIMG = {num: pygame.image.load(f'assets/menu/{num}') for num in os.listdir('assets/menu')} #est-ce que c'est pas magnifique ça, toutes les images load en une ligne
+        for clef in self.menuIMG:
+            if 'carte' in clef:
+                self.menuIMG[clef] = pygame.transform.scale(self.menuIMG[clef],(self.screen.get_size()[0]*2,self.screen.get_size()[1]))
+            elif 'niveau' in clef:
+                self.menuIMG[clef] = pygame.transform.scale(self.menuIMG[clef],(self.screen.get_size()[1]/20,self.screen.get_size()[1]/20))
         
     
     def inputs(self):
@@ -119,6 +125,7 @@ class Jeu:
             c += 1
     
     def window_niveau(self):
+        #self.screen.blit(self.menuIMG[f'{self.monde} carte.png'],(0,0))
         self.screen.fill('black')
         c = 0
         for niveau in self.listeMondes[self.monde]:
@@ -234,6 +241,7 @@ class Entity:
         #pygame.draw.rect(self.screen, "red", self.rect,5)
         self.screen.blit(self.image,self.rect)
     
+    
     def animation(self):
         if self.speedHori > 0:
             self.image = pygame.transform.scale(self.original,(self.height * self.playerSize,self.width *self.playerSize))
@@ -245,7 +253,7 @@ class Entity:
         onground = self.check_collision(0, 1)[0]
         # check keys
         key = pygame.key.get_pressed()
-        if key[pygame.K_LEFT] and self.joueur:
+        if key[pygame.K_LEFT] and self.joueur and self.pos[0] > 100:
             self.speedHori = -self.speed
         elif key[pygame.K_RIGHT] and self.joueur:
             self.speedHori = self.speed
@@ -284,7 +292,7 @@ class Entity:
                 if not plusPetit:
                     if pygame.Rect.colliderect(self.rect, i[0]):
                         tempo = copy.deepcopy(i) #tout les jours fuck le systeme de pointage jsp quoi de python all my homis hate this shit heuresement que copy existe 
-                        if i[2][8] and tempo[2][9]:
+                        if i[2][8] and tempo[2][9]: 
                             ('oui')
                             tempo[2][9] = False
                             self.blockRECT[e][c] = tempo
@@ -295,7 +303,7 @@ class Entity:
                                 for index in range(len(jeu.classDict['monde'].sauvegarde['V'])):
                                     jeu.classDict['monde'].sauvegarde['V'][index] += 1
 
-                        if general != False: # i[2][1] --> True ou False, correspond a si le bloc est sensé avoir une collision ou non
+                        if general != False: 
                             if self.speedHori > 0:
                                 coll = self.check_collision(-7,-1,False)
                             else:
@@ -304,7 +312,7 @@ class Entity:
                             if i[2][2] and not i[2][5] and self.speedVerti < 0 and coll[0] and not self.check_collision(0, -1, False , True)[0]:
                                 tempo[2][5] = True
                 
-                        if i[2][1]:
+                        if i[2][1]: # i[2][1] --> True ou False, correspond a si le bloc est sensé avoir une collision ou non
                             self.blockRECT[e][c] = tempo
                             collide = True
                             blocsPrincip.append(i)
@@ -479,7 +487,7 @@ class World:
                             self.liste.append([ligne,e,instru])
 
     def draw_on_screen(self):
-        self.screen.fill('black')
+        self.screen.fill('lightblue')
         self.screen.blit(self.font.render(str(self.sauvegarde['S'][0]),True,(255,255,255)),(0,0))
         for keys in self.blockRECT :
             for i in self.blockRECT[keys]:
@@ -524,7 +532,6 @@ class World:
     def save(self):
         os.remove(self.sauv)
         lVal = list(self.sauvegarde.values())
-        (lVal)
         jeu.nouvelle_sauvegarde(lVal[0],lVal[1],lVal[2],lVal[3][0],lVal[3][1])
 
 

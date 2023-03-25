@@ -8,4 +8,5 @@ p:[pole2.png,True,False,False,None,False,1,1,False,True]
 %:[poleEnd.png,True,False,False,None,False,1,1,False,True]
 <:[poleHoriEnd.png,True,False,False,None,False,1,1,False,True]
 O:[piece.png,False,False,False,None,False,0.5,0.5,True,True]
+G:[grass.png,True,False,False,None,False,10,2,False,True]
 
