@@ -69,10 +69,12 @@ class Menu:
                 if i != 'fullscreen' and i != 'retour':
                     self.width , self.height = get_monitors()[0].width * i ,get_monitors()[0].height * i
                     self.screen = pygame.display.set_mode((self.width, self.height))
+                    jeu.res = l
                 elif i == 'retour':
                     self.position = 'main'
                 else:
                     self.screen = pygame.display.set_mode((0,0),FULLSCREEN)
+                    jeu.res = 1
             self.screen.blit(image,imagerect)
             c += 1
 
@@ -96,7 +98,8 @@ class Jeu:
         self.COOLDOWN = 10
         self.joueur = {}
         self.cSauv = 0
-        self.menuIMG = {num: pygame.image.load(f'assets/menu/{num}') for num in os.listdir('assets/menu')} #est-ce que c'est pas magnifique ça, toutes les images load en une ligne
+        self.res = 0.75
+        self.menuIMG = {img: pygame.image.load(f'assets/menu/{img}') for img in os.listdir('assets/menu')} #est-ce que c'est pas magnifique ça, toutes les images load en une ligne
         for clef in self.menuIMG:
             if 'carte' in clef:
                 self.menuIMG[clef] = pygame.transform.scale(self.menuIMG[clef],(self.screen.get_size()[0]*2,self.screen.get_size()[1]))
@@ -134,7 +137,7 @@ class Jeu:
             niveaurect.y = niveaurect.height * c
             if niveaurect.left <= pygame.mouse.get_pos()[0] <= niveaurect.right and niveaurect.top <= pygame.mouse.get_pos()[1] <= niveaurect.bottom and pygame.mouse.get_pressed()[0] and self.cooldown > self.COOLDOWN:
                 self.cooldown = 0
-                self.classDict['monde'] = World(self.screen,f'{self.monde}/{niveau}',f'sauvegardes/save{self.cSauv}.txt')
+                self.classDict['monde'] = World(self.screen,f'{self.monde}/{niveau}',f'sauvegardes/save{self.cSauv}.txt',self.res)
                 self.position = ''
                 self.classPos = 'monde'
             self.screen.blit(niveautxt,niveaurect)
@@ -378,7 +381,8 @@ class Entity:
         
 
 class World:
-    def __init__(self,screen,chemin,sauv) -> None:
+    def __init__(self,screen,chemin,sauv,res) -> None:
+        self.Res = res
         self.updateBL = False
         self.width , self.height = screen.get_size()
         self.screen = screen
@@ -391,10 +395,16 @@ class World:
         self.instruDict = self.dicoInstru(self.get_txt('block.txt'))
         self.sauvegarde = self.dicoInstru(self.get_txt(sauv))
         self.sauv = sauv
+        self.chemin = chemin
         self.monstre = {}
         self.font = pygame.font.SysFont('Arial',32)
-        for name in os.listdir('assets/world'):
-            self.imagesWorld[name] = pygame.image.load('assets/world/{}'.format(name))
+        self.othersIMG = {img: pygame.image.load(f'assets/world/others/{img}') for img in os.listdir('assets/world/others')}
+        for i in self.othersIMG:
+            if 'fond' in i:
+                scale = self.othersIMG[i].get_size()
+                self.othersIMG[i] = pygame.transform.scale(self.othersIMG[i],(scale[0]*res,scale[1]*res))
+        for name in os.listdir('assets/world/blocs'):
+            self.imagesWorld[name] = pygame.image.load('assets/world/blocs/{}'.format(name))
         
         for image in self.instruDict:
             self.imagesWorld[self.instruDict[image][0]] = pygame.transform.scale(self.imagesWorld[self.instruDict[image][0]],(self.blockSize * float(self.instruDict[image][6]), self.blockSize * float(self.instruDict[image][7])))
@@ -487,7 +497,8 @@ class World:
                             self.liste.append([ligne,e,instru])
 
     def draw_on_screen(self):
-        self.screen.fill('lightblue')
+        a = self.chemin[:self.chemin.index('/')]
+        self.screen.blit(self.othersIMG[f'{a}-fond.png'],(-self.decalage,-self.screen.get_size()[0]*0.05))
         self.screen.blit(self.font.render(str(self.sauvegarde['S'][0]),True,(255,255,255)),(0,0))
         for keys in self.blockRECT :
             for i in self.blockRECT[keys]:
