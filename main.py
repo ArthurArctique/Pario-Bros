@@ -398,13 +398,13 @@ class World:
         self.chemin = chemin
         self.monstre = {}
         self.font = pygame.font.SysFont('Arial',32)
-        self.othersIMG = {img: pygame.image.load(f'assets/world/others/{img}') for img in os.listdir('assets/world/others')}
+        self.othersIMG = {img: pygame.image.load(f'assets/world/others/{img}').convert_alpha() for img in os.listdir('assets/world/others')}
         for i in self.othersIMG:
             if 'fond' in i:
                 scale = self.othersIMG[i].get_size()
                 self.othersIMG[i] = pygame.transform.scale(self.othersIMG[i],(scale[0]*res,scale[1]*res))
         for name in os.listdir('assets/world/blocs'):
-            self.imagesWorld[name] = pygame.image.load('assets/world/blocs/{}'.format(name))
+            self.imagesWorld[name] = pygame.image.load('assets/world/blocs/{}'.format(name)).convert_alpha()
         
         for image in self.instruDict:
             self.imagesWorld[self.instruDict[image][0]] = pygame.transform.scale(self.imagesWorld[self.instruDict[image][0]],(self.blockSize * float(self.instruDict[image][6]), self.blockSize * float(self.instruDict[image][7])))
