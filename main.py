@@ -69,7 +69,7 @@ class Menu:
                 if i != 'fullscreen' and i != 'retour':
                     self.width , self.height = get_monitors()[0].width * i ,get_monitors()[0].height * i
                     self.screen = pygame.display.set_mode((self.width, self.height))
-                    jeu.res = l
+                    jeu.res = i
                 elif i == 'retour':
                     self.position = 'main'
                 else:
@@ -86,7 +86,7 @@ class Menu:
 class Jeu:
     def __init__(self) -> None:
         self.width , self.height = get_monitors()[0].width * 0.75,get_monitors()[0].height * 0.75
-        self.screen = pygame.display.set_mode((self.width,self.height))
+        self.screen = pygame.display.set_mode((int(self.width),int(self.height)))
         self.classDict = {'menu' : Menu(self.screen),'monde' : None}
         self.font = pygame.font.SysFont('Arial', 32)
         self.clock = pygame.time.Clock()
@@ -284,10 +284,11 @@ class Entity:
 
     def check_collision(self, x, y, general=True , plusPetit = False):
         collide = False
-
         self.pos += [x,y]
+
         self.rect.midbottom = self.pos
         blocsPrincip = []
+        
         for e in self.blockRECT:
             c = -1
             for i in self.blockRECT[e]:
@@ -296,11 +297,9 @@ class Entity:
                     if pygame.Rect.colliderect(self.rect, i[0]):
                         tempo = copy.deepcopy(i) #tout les jours fuck le systeme de pointage jsp quoi de python all my homis hate this shit heuresement que copy existe 
                         if i[2][8] and tempo[2][9]: 
-                            ('oui')
                             tempo[2][9] = False
                             self.blockRECT[e][c] = tempo
                             jeu.classDict['monde'].sauvegarde['S'][0] += 1
-                            (jeu.classDict['monde'].sauvegarde['S'])
                             if jeu.classDict['monde'].sauvegarde['S'][0] >= 100:
                                 jeu.classDict['monde'].sauvegarde['S'][0] = 0
                                 for index in range(len(jeu.classDict['monde'].sauvegarde['V'])):
@@ -312,47 +311,27 @@ class Entity:
                             else:
                                 coll = self.check_collision(7,-1,False)
                                 
-                            if i[2][2] and not i[2][5] and self.speedVerti < 0 and coll[0] and not self.check_collision(0, -1, False , True)[0]:
+                            if i[2][2] and not i[2][5] and self.speedVerti < 0 and coll[0] and self.check_collision(0, -1, False , True)[0]:
                                 tempo[2][5] = True
                 
                         if i[2][1]: # i[2][1] --> True ou False, correspond a si le bloc est sensé avoir une collision ou non
                             self.blockRECT[e][c] = tempo
                             collide = True
-                            blocsPrincip.append(i)
                     
                 else:
                     rect2 = self.rect.copy()
-                    rect2[2] /= 2
+                    rect2[2] /= 5
+                    rect2[0] += rect2[2]*2
                     if pygame.Rect.colliderect(rect2, i[0]):
-                        ('oui')
-                        if general != False:
-                            self.collideBlockSpe(i)
                         collide = True
-                        blocsPrincip.append(i)
+                        print("ui")
                     
                     
         self.pos += [-x,-y]
         self.rect.midbottom = self.pos
         
 
-            
-        
         return (collide,blocsPrincip)            # enlever bP
-    
-    
-    def collideBlockSpe(self,bloc):         # a terminer pou verfier qu'on touche QUE le bloc mys
-        pass
-
-        
-        """if doitChanger:
-                liste = jeu.classDict['monde'].blockRECT[symbole]
-                for i in range(len(liste)) :
-                    if liste[i][0] == bloc[0]:
-                        jeu.classDict['monde'].blockRECT[symbole][i][1] = changement
-                        (jeu.classDict['monde'].blockRECT[symbole][i][1])
-            return True
-        else:
-            return False"""
             
                     
         
@@ -382,8 +361,8 @@ class Entity:
 
 class World:
     def __init__(self,screen,chemin,sauv,res) -> None:
-        self.Res = res
-        self.updateBL = False
+        self.res = res
+        self.quotient = screen.get_size()[0] / 1920
         self.width , self.height = screen.get_size()
         self.screen = screen
         self.world = self.get_txt(chemin)
@@ -402,7 +381,7 @@ class World:
         for i in self.othersIMG:
             if 'fond' in i:
                 scale = self.othersIMG[i].get_size()
-                self.othersIMG[i] = pygame.transform.scale(self.othersIMG[i],(scale[0]*res,scale[1]*res))
+                self.othersIMG[i] = pygame.transform.scale(self.othersIMG[i],(scale[0]*self.quotient,scale[1]*self.quotient ))
         for name in os.listdir('assets/world/blocs'):
             self.imagesWorld[name] = pygame.image.load('assets/world/blocs/{}'.format(name)).convert_alpha()
         
@@ -498,7 +477,7 @@ class World:
 
     def draw_on_screen(self):
         a = self.chemin[:self.chemin.index('/')]
-        self.screen.blit(self.othersIMG[f'{a}-fond.png'],(-self.decalage,-self.screen.get_size()[0]*0.05))
+        self.screen.blit(self.othersIMG[f'{a}-fond.png'],(-self.decalage,-self.screen.get_size()[0]*0.07))
         self.screen.blit(self.font.render(str(self.sauvegarde['S'][0]),True,(255,255,255)),(0,0))
         for keys in self.blockRECT :
             for i in self.blockRECT[keys]:
