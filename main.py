@@ -203,24 +203,16 @@ class Jeu:
         pygame.display.flip()
         self.clock.tick(60)
 
-class Entity:
+class Players:
     def __init__(self,screen,blockRECT,name,joueur) -> None:
-        self.qJump = 1
         self.screen = screen
         self.blockRECT = blockRECT
         self.playerSize = self.screen.get_size()[0] * 0.00003
         self.decalage = 0
         self.speed = round(screen.get_size()[0] * 0.006) 
         self.joueur = joueur
-        if joueur:
-            self.original = pygame.image.load('assets/players/{}'.format(name))
-            self.joueur = True
-            self.pos = vec((10, 360))
-        else:
-            self.original = pygame.image.load('assets/monstres/{}'.format(name))
-            self.pos = vec((150,450))
-            self.speed = 3
-        
+        self.original = pygame.image.load('assets/players/{}'.format(name))
+        self.pos = vec((10, 360))
         self.height, self.width = self.original.get_size()
         self.image = pygame.transform.scale(self.original,(self.height * self.playerSize ,self.width * self.playerSize))
         self.rect = self.image.get_rect()
@@ -324,7 +316,6 @@ class Entity:
                     rect2[0] += rect2[2]*2
                     if pygame.Rect.colliderect(rect2, i[0]):
                         collide = True
-                        print("ui")
                     
                     
         self.pos += [-x,-y]
@@ -357,7 +348,142 @@ class Entity:
         self.deplacement()
         self.animation()
         self.draw()
+
+class Mobs:
+    def __init__(self,screen,blockRECT,name,joueur) -> None:
+        self.screen = screen
+        self.blockRECT = blockRECT
+        self.playerSize = self.screen.get_size()[0] * 0.00003
+        self.decalage = 0
+        self.speed = round(screen.get_size()[0] * 0.006) 
+        self.joueur = joueur
+        self.original = pygame.image.load('assets/monstres/{}'.format(name))
+        self.pos = vec((150,450))
+        self.speed = 3
         
+        self.height, self.width = self.original.get_size()
+        self.image = pygame.transform.scale(self.original,(self.height * self.playerSize ,self.width * self.playerSize))
+        self.rect = self.image.get_rect()
+        self.pos = vec((200, 0))
+        self.jumpspeed = self.screen.get_size()[1] * 0.031
+        self.speedVerti = 0
+        self.speedHori = 0
+        self.gravity = self.screen.get_size()[1] * 0.0015
+        self.min_jumpspeed = 4
+        self.prev_key = pygame.key.get_pressed()
+            
+
+    def draw(self):
+        self.rect.x -= self.decalage
+        
+        rect2 = self.rect.copy()
+        rect2[2] /= 2
+        #pygame.draw.rect(self.screen, "blue", rect2,5)
+        
+        
+        #pygame.draw.rect(self.screen, "red", self.rect,5)
+        self.screen.blit(self.image,self.rect)
+    
+    
+    def animation(self):
+        if self.speedHori > 0:
+            self.image = pygame.transform.scale(self.original,(self.height * self.playerSize,self.width *self.playerSize))
+        else:
+            self.image = pygame.transform.scale(pygame.transform.flip(self.original, 1, 0),(self.height * self.playerSize,self.width *self.playerSize))
+
+    def deplacement(self):
+        self.speedHori *= 0.88
+        onground = self.check_collision(0, 1)[0]
+        
+        if self.pos[0] > 100 or self.speedVerti == 0 and self.speedHori > 0:
+            self.speedHori = -self.speed
+        
+        elif self.speedVerti == 0 and self.speedHori < 0 :
+            self.speedHori = self.speed
+        
+        if not onground:  # 9.8 rounded up
+            self.speedVerti += self.gravity
+            
+        if onground and self.speedVerti > 0:
+            self.speedVerti = 0
+        
+        # movement
+        self.move(self.speedHori, self.speedVerti)
+
+    def check_collision(self, x, y, general=True , plusPetit = False):
+        collide = False
+        self.pos += [x,y]
+
+        self.rect.midbottom = self.pos
+        blocsPrincip = []
+        
+        for e in self.blockRECT:
+            c = -1
+            for i in self.blockRECT[e]:
+                c += 1
+                if not plusPetit:
+                    if pygame.Rect.colliderect(self.rect, i[0]):
+                        tempo = copy.deepcopy(i) #tout les jours fuck le systeme de pointage jsp quoi de python all my homis hate this shit heuresement que copy existe 
+                        if i[2][8] and tempo[2][9]: 
+                            tempo[2][9] = False
+                            self.blockRECT[e][c] = tempo
+                            jeu.classDict['monde'].sauvegarde['S'][0] += 1
+                            if jeu.classDict['monde'].sauvegarde['S'][0] >= 100:
+                                jeu.classDict['monde'].sauvegarde['S'][0] = 0
+                                for index in range(len(jeu.classDict['monde'].sauvegarde['V'])):
+                                    jeu.classDict['monde'].sauvegarde['V'][index] += 1
+
+                        if general != False: 
+                            if self.speedHori > 0:
+                                coll = self.check_collision(-7,-1,False)
+                            else:
+                                coll = self.check_collision(7,-1,False)
+                                
+                            if i[2][2] and not i[2][5] and self.speedVerti < 0 and coll[0] and self.check_collision(0, -1, False , True)[0]:
+                                tempo[2][5] = True
+                
+                        if i[2][1]: # i[2][1] --> True ou False, correspond a si le bloc est sensé avoir une collision ou non
+                            self.blockRECT[e][c] = tempo
+                            collide = True
+                    
+                else:
+                    rect2 = self.rect.copy()
+                    rect2[2] /= 5
+                    rect2[0] += rect2[2]*2
+                    if pygame.Rect.colliderect(rect2, i[0]):
+                        collide = True
+                    
+                    
+        self.pos += [-x,-y]
+        self.rect.midbottom = self.pos
+        
+
+        return (collide,blocsPrincip)            # enlever bP
+            
+                    
+        
+    
+    def move(self,x,y):
+        dx = x
+        dy = y
+        
+        while self.check_collision(0, dy)[0]:
+            dy -= numpy.sign(dy)
+
+        while self.check_collision(dx, dy)[0]:
+            dx -= numpy.sign(dx)
+        
+        self.pos += [dx,dy]
+
+        self.rect.midbottom = self.pos
+        
+        if self.check_collision(0, -1)[0]:
+            self.speedVerti = 0
+
+    def update(self):
+        self.deplacement()
+        self.animation()
+        self.draw()
 
 class World:
     def __init__(self,screen,chemin,sauv,res) -> None:
@@ -395,9 +521,9 @@ class World:
         self.initialiseDicoBloc()
         
         for name in os.listdir('assets/players'):
-            self.players[name] = Entity(self.screen,self.blockRECT,name,True)
+            self.players[name] = Players(self.screen,self.blockRECT,name,True)
         for name in os.listdir('assets/monstres'):
-            self.monstre[name] = Entity(self.screen,self.blockRECT,name,False)
+            self.monstre[name] = Mobs(self.screen,self.blockRECT,name,False)
     
 
     def get_txt(self,chemin):
