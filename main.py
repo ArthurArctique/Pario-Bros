@@ -232,9 +232,7 @@ class Players:
         rect2[2] /= 16
         rect2[0] += rect2[2]*8
         
-        pygame.draw.rect(self.screen, "blue", rect2,5)    # Faut arreter d'enlever ça avant que ça soit fini c'est pas pratique
-        
-        
+        #pygame.draw.rect(self.screen, "blue", rect2,5)     #Pour verifier les collisions
         #pygame.draw.rect(self.screen, "red", self.rect,5)
         self.screen.blit(self.image,self.rect)
     
@@ -248,7 +246,7 @@ class Players:
     def deplacement(self):
         self.speedHori *= 0.88
         onground = self.check_collision(0, 1)[0]
-        # check keys
+
         key = pygame.key.get_pressed()
         if key[pygame.K_LEFT] and self.joueur and self.pos[0] > 100:
             self.speedHori = -self.speed
@@ -258,22 +256,18 @@ class Players:
         if key[pygame.K_UP] and onground and self.joueur:
             self.speedVerti = -self.jumpspeed
 
-        # variable height jumping
         if self.prev_key[pygame.K_UP] and not key[pygame.K_UP]:
             if self.speedVerti < -self.min_jumpspeed:
                 self.speedVerti = -self.min_jumpspeed
 
         self.prev_key = key
 
-        # gravity
-
-        if not onground:  # 9.8 rounded up
+        if not onground:
             self.speedVerti += self.gravity 
 
         if onground and self.speedVerti > 0:
             self.speedVerti = 0
 
-        # movement
         self.move(self.speedHori, self.speedVerti)
 
     def check_collision(self, x, y, general=True , plusPetit = False):
@@ -318,15 +312,11 @@ class Players:
                         collide = True
                         blocsPrincip.append(i)
                     
-                    
         self.pos += [-x,-y]
         self.rect.midbottom = self.pos
-        
 
-        return (collide,blocsPrincip)            # enlever bP
+        return (collide,blocsPrincip)
             
-                    
-        
     
     def move(self,x,y):
         dx = x
@@ -370,20 +360,12 @@ class Mobs:
         self.speedHori = 0
         self.gravity = self.screen.get_size()[1] * 0.0015
         self.min_jumpspeed = 4
-        self.prev_key = pygame.key.get_pressed()
         self.left = False
         self.right = True
             
 
     def draw(self):
         self.rect.x -= self.decalage
-        
-        rect2 = self.rect.copy()
-        rect2[2] /= 2
-        #pygame.draw.rect(self.screen, "blue", rect2,5)
-        
-        
-        #pygame.draw.rect(self.screen, "red", self.rect,5)
         self.screen.blit(self.image,self.rect)
     
     
@@ -397,9 +379,6 @@ class Mobs:
         self.speedHori *= 0.88
         onground = self.check_collision(0, 1)[0]
 
-        # check keys
-        
-        
         if self.check_collision(1,0)[0]:
             self.left = True
             self.right = False
@@ -413,15 +392,9 @@ class Mobs:
         elif self.right:
             self.speedHori = self.speed
 
-        # gravity
-
-        if not onground:  # 9.8 rounded up
+        if not onground:  
             self.speedVerti += self.gravity 
 
-        if onground and self.speedVerti > 0:
-            self.speedVerti = 0
-
-        # movement
         self.move(self.speedHori, self.speedVerti)
 
     def check_collision(self, x, y, general=True , plusPetit = False):
@@ -432,36 +405,9 @@ class Mobs:
         blocsPrincip = []
         
         for e in self.blockRECT:
-            c = -1
             for i in self.blockRECT[e]:
-                c += 1
-                if not plusPetit:
-                    if pygame.Rect.colliderect(self.rect, i[0]):
-                        tempo = copy.deepcopy(i) #tout les jours fuck le systeme de pointage jsp quoi de python all my homis hate this shit heuresement que copy existe 
-                        if i[2][8] and tempo[2][9]: 
-                            tempo[2][9] = False
-                            self.blockRECT[e][c] = tempo
-                            jeu.classDict['monde'].sauvegarde['S'][0] += 1
-                            if jeu.classDict['monde'].sauvegarde['S'][0] >= 100:
-                                jeu.classDict['monde'].sauvegarde['S'][0] = 0
-                                for index in range(len(jeu.classDict['monde'].sauvegarde['V'])):
-                                    jeu.classDict['monde'].sauvegarde['V'][index] += 1
-
-                        if general != False: 
-
-                                
-                            if i[2][2] and not i[2][5] and self.speedVerti < 0 and self.check_collision(0, -1, False )[0]:
-                                tempo[2][5] = True
-                
-                        if i[2][1]: # i[2][1] --> True ou False, correspond a si le bloc est sensé avoir une collision ou non
-                            self.blockRECT[e][c] = tempo
-                            collide = True
-                    
-                else:
-                    rect2 = self.rect.copy()
-                    rect2[2] /= 5
-                    rect2[0] += rect2[2]*2
-                    if pygame.Rect.colliderect(rect2, i[0]):
+                if pygame.Rect.colliderect(self.rect, i[0]):
+                    if i[2][1]: # i[2][1] --> True ou False, correspond a si le bloc est sensé avoir une collision ou non
                         collide = True
                     
                     
@@ -469,10 +415,8 @@ class Mobs:
         self.rect.midbottom = self.pos
         
 
-        return (collide,blocsPrincip)            # enlever bP
+        return (collide,blocsPrincip)
             
-                    
-        
     
     def move(self,x,y):
         dx = x
