@@ -194,12 +194,18 @@ class Jeu:
             self.cooldown += 1
             self.window_niveau()
 
+    def Affichefps(self):
+        test = self.font.render("fps : "+str(round(self.clock.get_fps())),True,(255,255,255))
+        self.screen.blit(test,(500,0))
+
 
     def update(self):
+
         self.on_est_ou()
         if self.classPos != '':
             self.classDict[self.classPos].update()
         self.inputs()
+        self.Affichefps()
         pygame.display.flip()
         self.clock.tick(60)
 
