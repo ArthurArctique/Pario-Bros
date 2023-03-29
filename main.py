@@ -15,7 +15,11 @@ class Menu:
         self.etat = True
         self.position = 'main'
         self.cooldown = 0
-        self.COOLDOWN = 30    
+        self.COOLDOWN = 30   
+        self.listePNGVidFond = os.listdir('Composition 4')
+        self.inverse = False
+        self.clefactuel = 0
+
     def on_est_ou(self):
         if self.position == 'main':
             self.cooldown += 1
@@ -28,7 +32,17 @@ class Menu:
             jeu.position = 'saves'
    
     def main(self):
-        self.screen.fill('black')
+        if not self.inverse:
+            self.screen.blit(pygame.transform.scale(pygame.image.load(f'Composition 4/{self.listePNGVidFond[self.clefactuel]}'),(self.screen.get_size())),(0,0))
+            self.clefactuel += 1
+            if self.clefactuel ==len(self.listePNGVidFond)-1:
+                self.inverse = True
+        else:
+            print(self.clefactuel)
+            self.screen.blit(pygame.transform.scale(pygame.image.load(f'Composition 4/{self.listePNGVidFond[self.clefactuel]}'),(self.screen.get_size())),(0,0))
+            self.clefactuel -= 1
+            if self.clefactuel == 0:
+                self.inverse = False
         self.x,self.y = pygame.mouse.get_pos()
         
         """
@@ -80,6 +94,13 @@ class Menu:
 
 
     def update(self):
+        """print(pygame.key.name(97))
+        tempo = []
+        for i in range(len(pygame.key.get_pressed())):
+            if pygame.key.get_pressed()[i]:
+                print(i)"""
+
+        #print(i)
         self.on_est_ou()
         pygame.display.flip()
 
@@ -209,7 +230,7 @@ class Players:
         self.blockRECT = blockRECT
         self.playerSize = self.screen.get_size()[0] * 0.00003
         self.decalage = 0
-        self.speed = round(screen.get_size()[0] * 0.006) 
+        self.speed = round(screen.get_size()[0] * 0.006)
         self.joueur = joueur
         self.original = pygame.image.load('assets/players/{}'.format(name))
         self.pos = vec((10, 360))
@@ -229,8 +250,10 @@ class Players:
         self.rect.x -= self.decalage
         
         rect2 = self.rect.copy()
-        rect2[2] /= 2
-        #pygame.draw.rect(self.screen, "blue", rect2,5)
+        rect2[2] /= 16
+        rect2[0] += rect2[2]*8
+        
+        pygame.draw.rect(self.screen, "blue", rect2,5)    # Faut arreter d'enlever ça avant que ça soit fini c'est pas pratique
         
         
         #pygame.draw.rect(self.screen, "red", self.rect,5)
@@ -298,12 +321,9 @@ class Players:
                                     jeu.classDict['monde'].sauvegarde['V'][index] += 1
 
                         if general != False: 
-                            if self.speedHori > 0:
-                                coll = self.check_collision(-7,-1,False)
-                            else:
-                                coll = self.check_collision(7,-1,False)
-                                
-                            if i[2][2] and not i[2][5] and self.speedVerti < 0 and coll[0] and self.check_collision(0, -1, False , True)[0]:
+                            
+                            test = self.check_collision(0, -1, False , True)
+                            if i[2][2] and not i[2][5] and self.speedVerti < 0 and test[0]:
                                 tempo[2][5] = True
                 
                         if i[2][1]: # i[2][1] --> True ou False, correspond a si le bloc est sensé avoir une collision ou non
@@ -312,10 +332,12 @@ class Players:
                     
                 else:
                     rect2 = self.rect.copy()
-                    rect2[2] /= 5
-                    rect2[0] += rect2[2]*2
-                    if pygame.Rect.colliderect(rect2, i[0]):
+                    rect2[2] /= 16
+                    rect2[0] += rect2[2]*8
+                    
+                    if pygame.Rect.colliderect(rect2, i[0]) and i[2][2] and not i[2][5] :
                         collide = True
+                        blocsPrincip.append(i)
                     
                     
         self.pos += [-x,-y]
@@ -358,19 +380,20 @@ class Mobs:
         self.speed = round(screen.get_size()[0] * 0.006) 
         self.joueur = joueur
         self.original = pygame.image.load('assets/monstres/{}'.format(name))
-        self.pos = vec((150,450))
         self.speed = 3
         
         self.height, self.width = self.original.get_size()
         self.image = pygame.transform.scale(self.original,(self.height * self.playerSize ,self.width * self.playerSize))
         self.rect = self.image.get_rect()
-        self.pos = vec((200, 0))
+        self.pos = vec((500, 0))
         self.jumpspeed = self.screen.get_size()[1] * 0.031
         self.speedVerti = 0
         self.speedHori = 0
         self.gravity = self.screen.get_size()[1] * 0.0015
         self.min_jumpspeed = 4
         self.prev_key = pygame.key.get_pressed()
+        self.left = False
+        self.right = True
             
 
     def draw(self):
@@ -394,19 +417,31 @@ class Mobs:
     def deplacement(self):
         self.speedHori *= 0.88
         onground = self.check_collision(0, 1)[0]
+
+        # check keys
         
-        if self.pos[0] > 100 or self.speedVerti == 0 and self.speedHori > 0:
-            self.speedHori = -self.speed
         
-        elif self.speedVerti == 0 and self.speedHori < 0 :
-            self.speedHori = self.speed
-        
-        if not onground:  # 9.8 rounded up
-            self.speedVerti += self.gravity
+        if self.check_collision(1,0)[0]:
+            self.left = True
+            self.right = False
             
+        if self.check_collision(-1,0)[0]:
+            self.left = False
+            self.right = True
+        
+        if self.left:
+            self.speedHori = -self.speed
+        elif self.right:
+            self.speedHori = self.speed
+
+        # gravity
+
+        if not onground:  # 9.8 rounded up
+            self.speedVerti += self.gravity 
+
         if onground and self.speedVerti > 0:
             self.speedVerti = 0
-        
+
         # movement
         self.move(self.speedHori, self.speedVerti)
 
@@ -434,12 +469,9 @@ class Mobs:
                                     jeu.classDict['monde'].sauvegarde['V'][index] += 1
 
                         if general != False: 
-                            if self.speedHori > 0:
-                                coll = self.check_collision(-7,-1,False)
-                            else:
-                                coll = self.check_collision(7,-1,False)
+
                                 
-                            if i[2][2] and not i[2][5] and self.speedVerti < 0 and coll[0] and self.check_collision(0, -1, False , True)[0]:
+                            if i[2][2] and not i[2][5] and self.speedVerti < 0 and self.check_collision(0, -1, False )[0]:
                                 tempo[2][5] = True
                 
                         if i[2][1]: # i[2][1] --> True ou False, correspond a si le bloc est sensé avoir une collision ou non
@@ -609,6 +641,7 @@ class World:
             for i in self.blockRECT[keys]:
                 if i[2][9]:
                     rect = pygame.Rect(i[0][0]-self.decalage, i[0][1], self.blockSize, self.blockSize)
+
                     if not i[2][5]:
                         self.screen.blit(self.imagesWorld[self.instruDict[i[1]][0]],rect)
                     else:
@@ -622,13 +655,17 @@ class World:
         C'est mieux un scrolling centré en vrai ? 
         """
         for name in self.players:
-            if self.players[name].rect.x-self.players[name].decalage >= self.width*0.55-self.decalage:     
+            if self.players[name].rect.x-self.players[name].decalage >= self.width*0.55-self.decalage:
                 self.decalage += self.players[name].speedHori
                 self.players[name].decalage = self.decalage
+                for nameMonstre in self.monstre :
+                    self.monstre[nameMonstre].decalage = self.decalage
 
             if self.players[name].rect.x-self.players[name].decalage <= self.width*0.45-self.decalage and self.decalage>0:     
                 self.decalage += self.players[name].speedHori
                 self.players[name].decalage = self.decalage
+                for nameMonstre in self.monstre :
+                    self.monstre[nameMonstre].decalage = self.decalage
             
 
 
