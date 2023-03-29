@@ -300,20 +300,10 @@ class Players:
                                     jeu.classDict['monde'].sauvegarde['V'][index] += 1
 
                         if general != False: 
-                            if self.speedHori > 0:
-                                coll = self.check_collision(-1,-1,False)
-                            else:
-                                coll = self.check_collision(1,-1,False)
-                            
                             
                             test = self.check_collision(0, -1, False , True)
                             if i[2][2] and not i[2][5] and self.speedVerti < 0 and test[0]:
                                 tempo[2][5] = True
-                                print(test[1])
-                                rect2 = self.rect.copy()
-                                rect2[2] /= 16
-                                rect2[0] += rect2[2]*8
-                                print(rect2)
                 
                         if i[2][1]: # i[2][1] --> True ou False, correspond a si le bloc est sensé avoir une collision ou non
                             self.blockRECT[e][c] = tempo
@@ -324,9 +314,9 @@ class Players:
                     rect2[2] /= 16
                     rect2[0] += rect2[2]*8
                     
-                    if pygame.Rect.colliderect(rect2, i[0]):
+                    if pygame.Rect.colliderect(rect2, i[0]) and i[2][2] and not i[2][5] :
                         collide = True
-                        blocsPrincip.append(i[0])
+                        blocsPrincip.append(i)
                     
                     
         self.pos += [-x,-y]
@@ -458,12 +448,9 @@ class Mobs:
                                     jeu.classDict['monde'].sauvegarde['V'][index] += 1
 
                         if general != False: 
-                            if self.speedHori > 0:
-                                coll = self.check_collision(-7,-1,False)
-                            else:
-                                coll = self.check_collision(7,-1,False)
+
                                 
-                            if i[2][2] and not i[2][5] and self.speedVerti < 0 and coll[0] and self.check_collision(0, -1, False )[0]:
+                            if i[2][2] and not i[2][5] and self.speedVerti < 0 and self.check_collision(0, -1, False )[0]:
                                 tempo[2][5] = True
                 
                         if i[2][1]: # i[2][1] --> True ou False, correspond a si le bloc est sensé avoir une collision ou non
@@ -633,6 +620,7 @@ class World:
             for i in self.blockRECT[keys]:
                 if i[2][9]:
                     rect = pygame.Rect(i[0][0]-self.decalage, i[0][1], self.blockSize, self.blockSize)
+
                     if not i[2][5]:
                         self.screen.blit(self.imagesWorld[self.instruDict[i[1]][0]],rect)
                     else:
