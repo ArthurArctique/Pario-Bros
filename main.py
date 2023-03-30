@@ -15,8 +15,9 @@ class Menu:
         self.etat = True
         self.position = 'main'
         self.cooldown = 0
-        self.COOLDOWN = 30   
-        self.listePNGVidFond = os.listdir('Composition 4')
+        self.COOLDOWN = 15   
+        self.dictVanilla = {i:os.listdir(f'vids_vanilla/{i}') for i in os.listdir('vids_vanilla')} 
+        self.dictSpe = {i:os.listdir(f'vids_special/{i}') for i in os.listdir('vids_special')} 
         self.inverse = False
         self.clefactuel = 0
 
@@ -32,18 +33,33 @@ class Menu:
             jeu.position = 'saves'
    
     def main(self):
+        self.x,self.y = pygame.mouse.get_pos()
+        try:
+            for clef in self.dictVanilla:
+                surface = pygame.transform.scale(pygame.image.load(f'vids_vanilla/{clef}/{self.dictVanilla[clef][self.clefactuel]}').convert_alpha(),(self.screen.get_size()))
+                curseur_mask = pygame.mask.from_surface(pygame.Surface((40,40)))
+                surface_mask = pygame.mask.from_surface(surface)
+                if 'vanilla' in clef and surface_mask.overlap(curseur_mask, (self.x,self.y)):
+                    if pygame.mouse.get_pressed()[0] and self.cooldown > self.COOLDOWN:
+                        self.cooldown = 0
+                        self.position = 'jouer'
+                    underscore_i = clef.index('_')
+                    surface = pygame.transform.scale(pygame.image.load(f'vids_special/{clef[:underscore_i]}/{self.dictSpe[clef[:underscore_i]][self.clefactuel]}').convert_alpha(),(self.screen.get_size()))
+                    
+                self.screen.blit(surface,(0,0))
+        except:
+            print("Erreur d'affichage, image probablement corrompue elle s'est prise pour un dirgeant africain") #on va pas la garder celle la 
+            
+
         if not self.inverse:
-            self.screen.blit(pygame.transform.scale(pygame.image.load(f'Composition 4/{self.listePNGVidFond[self.clefactuel]}'),(self.screen.get_size())),(0,0))
             self.clefactuel += 1
-            if self.clefactuel ==len(self.listePNGVidFond)-1:
+            if self.clefactuel ==len(self.dictVanilla[list(self.dictVanilla)[0]])-1:
                 self.inverse = True
         else:
-            print(self.clefactuel)
-            self.screen.blit(pygame.transform.scale(pygame.image.load(f'Composition 4/{self.listePNGVidFond[self.clefactuel]}'),(self.screen.get_size())),(0,0))
             self.clefactuel -= 1
             if self.clefactuel == 0:
                 self.inverse = False
-        self.x,self.y = pygame.mouse.get_pos()
+        
         
         """
         Biensur ça va pas rester comme ça vu qu'il y aura des images ça sera des formules et les 'main' 'optionRes' machin trucs seront récupéré avec le nom des fichier comme 
@@ -52,20 +68,13 @@ class Menu:
         res = self.font.render("Resolution", True, (255, 255, 255))
         resRect = res.get_rect()
        
-        jouer = self.font.render("jouer", True, (255, 255, 255))
-        jouerRect = res.get_rect()
-        jouerRect.y += resRect.height
         
         if  resRect.x <= self.x <= resRect.width and resRect.y <= self.y <= resRect.height and pygame.mouse.get_pressed()[0] and self.cooldown > self.COOLDOWN:
             self.position = 'optionRes'
             self.cooldown = 0
-        if  jouerRect.left <= self.x <= jouerRect.right and jouerRect.y <= self.y <= jouerRect.bottom and pygame.mouse.get_pressed()[0] and self.cooldown > self.COOLDOWN:
-            self.position = 'jouer'
-            self.cooldown = 0
         
         
         self.screen.blit(res,resRect)
-        self.screen.blit(jouer,jouerRect)
     
     def optionRes(self):
         self.screen.fill('blue') # elle est pour toi celle la Maelan 
@@ -106,6 +115,7 @@ class Menu:
 
 class Jeu:
     def __init__(self) -> None:
+        self.FPS = 24 #de toute façon l'oeil humain ne vois pas à plus de 24 fps ;) 
         self.width , self.height = get_monitors()[0].width * 0.75,get_monitors()[0].height * 0.75
         self.screen = pygame.display.set_mode((int(self.width),int(self.height)))
         self.classDict = {'menu' : Menu(self.screen),'monde' : None}
@@ -178,6 +188,7 @@ class Jeu:
                 self.cooldown = 0
                 if saves != None:
                     self.position = 'monde'
+                    self.FPS = 60
                     self.cSauv = c + 1
                 else:
                     self.position = 'nbJoueurs'
@@ -222,7 +233,7 @@ class Jeu:
             self.classDict[self.classPos].update()
         self.inputs()
         pygame.display.flip()
-        self.clock.tick(60)
+        self.clock.tick(self.FPS)
 
 class Players:
     def __init__(self,screen,blockRECT,name,joueur) -> None:
