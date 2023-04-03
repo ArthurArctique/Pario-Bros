@@ -229,6 +229,7 @@ class Players:
         self.gravity = self.screen.get_size()[1] * 0.0015
         self.min_jumpspeed = 4
         self.prev_key = pygame.key.get_pressed()
+        self.est_mort = False
             
 
     def draw(self):
@@ -254,8 +255,10 @@ class Players:
         onground = self.check_collision(0, 1)[0]
 
         key = pygame.key.get_pressed()
-        if key[pygame.K_LEFT] and self.joueur and self.pos[0] > 100:
-            self.speedHori = -self.speed
+        if key[pygame.K_LEFT] and self.joueur :
+            if self.pos[0] > 100:
+                self.speedHori = -self.speed
+            
         elif key[pygame.K_RIGHT] and self.joueur:
             self.speedHori = self.speed
 
@@ -290,7 +293,7 @@ class Players:
                 if not plusPetit:
                     if pygame.Rect.colliderect(self.rect, i[0]):
                         tempo = copy.deepcopy(i) #tout les jours fuck le systeme de pointage jsp quoi de python all my homis hate this shit heuresement que copy existe 
-                        if i[2][8] and tempo[2][9]: 
+                        if i[2][8] and tempo[2][9]:
                             tempo[2][9] = False
                             self.blockRECT[e][c] = tempo
                             jeu.classDict['monde'].sauvegarde['S'][0] += 1
@@ -347,20 +350,21 @@ class Players:
         self.draw()
 
 class Mobs:
-    def __init__(self,screen,blockRECT,name,joueur) -> None:
+    def __init__(self,screen,blockRECT,name,pos,realName) -> None:
         self.screen = screen
         self.blockRECT = blockRECT
         self.playerSize = self.screen.get_size()[0] * 0.00003
         self.decalage = 0
         self.speed = round(screen.get_size()[0] * 0.006) 
-        self.joueur = joueur
         self.original = pygame.image.load('assets/monstres/{}'.format(name))
         self.speed = 3
+        self.name = name
         
         self.height, self.width = self.original.get_size()
         self.image = pygame.transform.scale(self.original,(self.height * self.playerSize ,self.width * self.playerSize))
         self.rect = self.image.get_rect()
-        self.pos = vec((500, 0))
+        self.pos = vec(pos)
+        self.pos_base = vec(pos)
         self.jumpspeed = self.screen.get_size()[1] * 0.031
         self.speedVerti = 0
         self.speedHori = 0
@@ -368,11 +372,20 @@ class Mobs:
         self.min_jumpspeed = 4
         self.left = False
         self.right = True
-            
+        self.est_mort = False
+        self.realName = realName
 
     def draw(self):
         self.rect.x -= self.decalage
         self.screen.blit(self.image,self.rect)
+        pygame.draw.rect(self.screen, "red", self.rect,5)
+        
+        rect2 = self.rect.copy()
+        rect2[3] = 20
+        rect2[2] += 10
+        rect2[0] -=5
+        rect2[1] = self.rect[1]-rect2[3]
+        pygame.draw.rect(self.screen, "blue", rect2,5)
     
     
     def animation(self):
@@ -380,7 +393,11 @@ class Mobs:
             self.image = pygame.transform.scale(self.original,(self.height * self.playerSize,self.width *self.playerSize))
         else:
             self.image = pygame.transform.scale(pygame.transform.flip(self.original, 1, 0),(self.height * self.playerSize,self.width *self.playerSize))
-
+    
+    def freeze(self):
+        if self.pos[0] < int(jeu.classDict['monde'].players["Mario.png"].pos[0]-1500) and self.pos[0] > 0  or self.pos[0] > int(jeu.classDict['monde'].players["Mario.png"].pos[0]+1500):
+            self.speed = 0
+        
     def deplacement(self):
         self.speedHori *= 0.88
         onground = self.check_collision(0, 1)[0]
@@ -395,33 +412,71 @@ class Mobs:
         
         if self.left:
             self.speedHori = -self.speed
+        
         elif self.right:
             self.speedHori = self.speed
+        
 
-        if not onground:  
-            self.speedVerti += self.gravity 
-
+        if self.name != "goomba.png":
+            
+            if self.pos[0] <= float(int(self.pos_base[0]) - 200):
+                self.left = False
+                self.right = True
+            
+            elif self.pos[0] >= float(int(self.pos_base[0]) + 200):
+                self.left = True
+                self.right = False
+        
+        if self.name != "koopa_volant.png":
+            
+            if not onground:  
+                self.speedVerti += self.gravity 
         self.move(self.speedHori, self.speedVerti)
-
-    def check_collision(self, x, y, general=True , plusPetit = False):
+        
+        
+    def check_collision(self, x, y):
+        #trouver erreur entités
         collide = False
         self.pos += [x,y]
 
         self.rect.midbottom = self.pos
-        blocsPrincip = []
         
         for e in self.blockRECT:
             for i in self.blockRECT[e]:
                 if pygame.Rect.colliderect(self.rect, i[0]):
                     if i[2][1]: # i[2][1] --> True ou False, correspond a si le bloc est sensé avoir une collision ou non
                         collide = True
-                    
-                    
+                        
+        
+        world = jeu.classDict['monde']
+        
+        for key in world.players:
+            joueur = world.players[key]
+            save = [joueur.rect[0],joueur.rect[1]]
+            joueur.rect[0],joueur.rect[1] = joueur.pos
+            
+            rect2 = self.rect.copy()
+            rect2[3] = 20
+            rect2[2] += 10
+            rect2[0] -=5
+            rect2[1] = self.rect[1]-rect2[3]
+            
+            self.rect[1] += self.rect[3]
+            rect2[1] += self.rect[3]
+            
+            if not pygame.Rect.colliderect(self.rect, joueur.rect) and pygame.Rect.colliderect(rect2, joueur.rect) and not self.est_mort:
+                self.speed = 0
+                self.est_mort = True
+                joueur.speedVerti = -joueur.jumpspeed
+            elif pygame.Rect.colliderect(self.rect, joueur.rect) :
+                joueur.est_mort = True
+
+            joueur.rect[0],joueur.rect[1] = save
+
+                
         self.pos += [-x,-y]
         self.rect.midbottom = self.pos
-        
-
-        return (collide,blocsPrincip)
+        return (collide,0)
             
     
     def move(self,x,y):
@@ -433,7 +488,7 @@ class Mobs:
 
         while self.check_collision(dx, dy)[0]:
             dx -= numpy.sign(dx)
-        
+            
         self.pos += [dx,dy]
 
         self.rect.midbottom = self.pos
@@ -442,6 +497,10 @@ class Mobs:
             self.speedVerti = 0
 
     def update(self):
+        if self.est_mort :
+            return self.realName
+            
+        self.freeze()
         self.deplacement()
         self.animation()
         self.draw()
@@ -452,7 +511,7 @@ class World:
         self.quotient = screen.get_size()[0] / 1920
         self.width , self.height = screen.get_size()
         self.screen = screen
-        self.world = self.get_txt(chemin)
+        self.world = self.get_txt(chemin)# blocks permettant la creation du niveau  
         self.blockSize = int(screen.get_size()[1]/15)
         self.decalage = 0
         self.imagesWorldOrigignal = {}
@@ -465,6 +524,11 @@ class World:
         self.monstre = {}
         self.font = pygame.font.SysFont('Arial',32)
         self.othersIMG = {img: pygame.image.load(f'assets/world/others/{img}').convert_alpha() for img in os.listdir('assets/world/others')}
+        self.compteur = 0
+        self.monstre_spawn = []
+        self.nb_monstre = 0
+        self.toDeleteMonstre = []
+        
         for i in self.othersIMG:
             if 'fond' in i:
                 scale = self.othersIMG[i].get_size()
@@ -483,8 +547,6 @@ class World:
         
         for name in os.listdir('assets/players'):
             self.players[name] = Players(self.screen,self.blockRECT,name,True)
-        for name in os.listdir('assets/monstres'):
-            self.monstre[name] = Mobs(self.screen,self.blockRECT,name,False)
     
 
     def get_txt(self,chemin):
@@ -507,13 +569,44 @@ class World:
     def mort(self):
         c = 0
         for i in self.players:
-            if self.players[i].rect.y >= self.screen.get_size()[1]:
+            if self.players[i].rect.y >= self.screen.get_size()[1] or self.players[i].est_mort:
                 self.sauvegarde['V'][c] -= 1
                 self.save()
                 jeu.position = 'niveau'
                 jeu.classPos = ''
             c+=1
     
+    def monstres(self):#fais apparaitre les monstres si proche du joueur sinon le rajoute a une liste d'attente
+        for name in self.blockRECT:
+            if name == 'M':
+                for i in range(len(self.blockRECT[name])):
+                    if int(self.players["Mario.png"].pos[0]+1200) < self.blockRECT[name][i][0][0]:
+                        self.monstre_spawn.append(("goomba.png",(self.blockRECT[name][i][0][0],self.blockRECT[name][i][0][1])))
+                    else:
+                        self.monstre["goomba.png"+str(self.nb_monstre)] = Mobs(self.screen,self.blockRECT,"goomba.png",(self.blockRECT[name][i][0][0],self.blockRECT[name][i][0][1]),"goomba.png"+str(self.nb_monstre))
+                        self.nb_monstre+=1
+                   
+            if name == "K":
+                for i in range(len(self.blockRECT[name])):
+                    if int(self.players["Mario.png"].pos[0]+1200) < self.blockRECT[name][i][0][0]:
+                        self.monstre_spawn.append(("koopa.png",(self.blockRECT[name][i][0][0],self.blockRECT[name][i][0][1])))
+                    else:
+                        self.monstre["koopa.png"+str(self.nb_monstre)] = Mobs(self.screen,self.blockRECT,"koopa.png",(self.blockRECT[name][i][0][0],self.blockRECT[name][i][0][1]),"koopa.png"+str(self.nb_monstre))
+                        self.nb_monstre+=1
+     
+    def spawn(self):# fais apparaitre les monstres quand ils sont a une distance raisonnable du joueur
+
+        if self.monstre_spawn != []:
+            liste_supp = []
+            for i in self.monstre_spawn:
+                if int(self.players["Mario.png"].pos[0]+1200) > i[1][0]:
+                    self.monstre[i[0]+str(self.nb_monstre)] = Mobs(self.screen,self.blockRECT,i[0],(i[1][0],i[1][1]),i[0]+str(self.nb_monstre))
+                    self.nb_monstre+=1
+                    liste_supp.append(self.monstre_spawn.index((i[0],(i[1][0],i[1][1]))))
+            if liste_supp != []:
+                for element in liste_supp:
+                    self.monstre_spawn.pop(element)
+                    
     def dicoInstru(self,liste):
         dict_ = {}
         for i in liste:
@@ -618,6 +711,10 @@ class World:
 
 
     def update(self):
+        if self.compteur < 1:
+            self.monstres()
+            self.compteur+=1
+        self.spawn()
         self.mort()
         self.inputsMouse()
         self.inputs()
@@ -625,8 +722,16 @@ class World:
         self.draw_on_screen()
         for personnage in self.players:
             self.players[personnage].update()
+            
+        if len(self.toDeleteMonstre) != 0:
+            for e in self.toDeleteMonstre:
+                self.monstre.pop(e)
+            self.toDeleteMonstre = []
+                
         for monstres in self.monstre:
-            self.monstre[monstres].update()
+            toDelete = self.monstre[monstres].update()
+            if toDelete :
+                self.toDeleteMonstre.append(toDelete)
         
         
 jeu = Jeu()
