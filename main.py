@@ -15,7 +15,8 @@ class Menu:
         self.etat = True
         self.position = 'main'
         self.cooldown = 0
-        self.COOLDOWN = 30    
+        self.COOLDOWN = 30
+        
     def on_est_ou(self):
         if self.position == 'main':
             self.cooldown += 1
@@ -230,8 +231,32 @@ class Players:
         self.min_jumpspeed = 4
         self.prev_key = pygame.key.get_pressed()
         self.est_mort = False
+        self.rectScreen = self.screen.get_rect()
+        
+        self.etats = {"grand":"Mario.png","petit":"Mario.png"}
+        self.etat = "petit"
+        self.sizeOri = self.playerSize
+        
+        self.changeSkin(self.etat)
+
+        
+
+    def changeSkin(self,taille):
+        self.original = pygame.image.load('assets/players/{}'.format(self.etats[taille]))
+        
+        if taille == "petit":
+            self.playerSize = self.sizeOri/2
+        else:
+            self.playerSize = self.sizeOri
+            
+        self.image = pygame.transform.scale(self.original,(self.height * self.playerSize ,self.width * self.playerSize))
+        self.rect = self.image.get_rect()
+        self.etat = taille
             
 
+
+    
+    
     def draw(self):
         self.rect.x -= self.decalage
         
@@ -241,7 +266,10 @@ class Players:
         
         #pygame.draw.rect(self.screen, "blue", rect2,5)     #Pour verifier les collisions
         #pygame.draw.rect(self.screen, "red", self.rect,5)
-        self.screen.blit(self.image,self.rect)
+        
+        
+        if self.rect.colliderect(self.rectScreen):
+            self.screen.blit(self.image,self.rect)
     
     
     def animation(self):
@@ -268,6 +296,9 @@ class Players:
         if self.prev_key[pygame.K_UP] and not key[pygame.K_UP]:
             if self.speedVerti < -self.min_jumpspeed:
                 self.speedVerti = -self.min_jumpspeed
+                
+        if key[pygame.K_DOWN] and self.joueur :
+            self.changeSkin("grand")
 
         self.prev_key = key
 
@@ -374,19 +405,21 @@ class Mobs:
         self.right = True
         self.est_mort = False
         self.realName = realName
+        self.rectScreen = self.screen.get_rect()
 
     def draw(self):
         self.rect.x -= self.decalage
         self.screen.blit(self.image,self.rect)
-        pygame.draw.rect(self.screen, "red", self.rect,5)
         
+        """
+        pygame.draw.rect(self.screen, "red", self.rect,5)
         rect2 = self.rect.copy()
         rect2[3] = 20
         rect2[2] += 10
         rect2[0] -=5
         rect2[1] = self.rect[1]-rect2[3]
         pygame.draw.rect(self.screen, "blue", rect2,5)
-    
+        """
     
     def animation(self):
         if self.speedHori > 0:
@@ -458,7 +491,7 @@ class Mobs:
             rect2 = self.rect.copy()
             rect2[3] = 20
             rect2[2] += 10
-            rect2[0] -=5
+            rect2[0] -= 5
             rect2[1] = self.rect[1]-rect2[3]
             
             self.rect[1] += self.rect[3]
