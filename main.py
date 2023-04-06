@@ -13,6 +13,7 @@ class Menu:
         self.font = pygame.font.SysFont('Arial', 32)
         self.fullscreen = False
         self.etat = True
+        
         self.position = 'main'
         self.cooldown = 0
         self.COOLDOWN = 30
@@ -233,7 +234,7 @@ class Players:
         self.est_mort = False
         self.rectScreen = self.screen.get_rect()
         
-        self.etats = {"grand":"Mario.png","petit":"Mario.png"}
+        self.etats = {"grand":"Mario.png","petit":"Mario.png","feu":"MarioFeu.png"}
         self.etat = "petit"
         self.sizeOri = self.playerSize
         
@@ -298,7 +299,7 @@ class Players:
                 self.speedVerti = -self.min_jumpspeed
                 
         if key[pygame.K_DOWN] and self.joueur :
-            self.changeSkin("grand")
+            self.changeSkin("feu")
 
         self.prev_key = key
 
@@ -578,8 +579,7 @@ class World:
         
         self.initialiseDicoBloc()
         
-        for name in os.listdir('assets/players'):
-            self.players[name] = Players(self.screen,self.blockRECT,name,True)
+        self.players["Mario.png"] = Players(self.screen,self.blockRECT,"Mario.png",True)
     
 
     def get_txt(self,chemin):
