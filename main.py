@@ -1207,7 +1207,7 @@ class World:
             for i in self.blockRECT[keys]:
                 if i[2][9]:
                     rect = pygame.Rect(i[0][0]-self.decalage, i[0][1], self.blockSize, self.blockSize)
-                    if -self.decalage <= rect.x <= self.screen.get_size()[0] + self.decalage:
+                    if -self.decalage -1 <= rect.x <= self.screen.get_size()[0] + self.decalage:
                         
                         if not i[2][5]:
                             self.screen.blit(self.imagesWorld[self.instruDict[i[1]][0]],rect)
