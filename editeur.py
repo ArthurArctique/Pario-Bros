@@ -85,7 +85,7 @@ def writeTXT(nom):
 
 
 
-
+ctrlZ = []
 info = dicoInstru('block.txt')
 scale = 0.75
 
@@ -115,6 +115,13 @@ while True:
     
     curseur.x,curseur.y = pygame.mouse.get_pos()
 
+    if pygame.key.get_pressed()[K_LCTRL] and pygame.key.get_pressed()[K_z] and cooldown > COOLDOWN * 2:
+        cooldown = 0
+        if ctrlZ:
+            value = ctrlZ.pop(-1)
+            case[value] = None
+            ligne[value[1]][value[0]] = ' '
+
     if pygame.key.get_pressed()[K_SPACE] and groscooldown > GROSCOOLDOWN:
         groscooldown = 0
         txt()
@@ -141,17 +148,18 @@ while True:
                 if not case[(j,i)]:
                     surface.fill('red')
                     surface.set_alpha(100)
-                if pygame.mouse.get_pressed()[0] and cooldown > COOLDOWN and select:
+                if pygame.mouse.get_pressed()[0] and cooldown > COOLDOWN and select and ligne[i][j] == ' ':
                     cooldown = 0
                     case[(j,i)] = image[select]
                     ligne[i][j] = image[select][1]
+                    ctrlZ.append((j,i))
                 
                 if case[(j,i)] and pygame.mouse.get_pressed()[2] and cooldown > COOLDOWN:
                     case[(j,i)] = None
                     ligne[i][j] = ' '
             
                 screen.blit(surface,rect)
-                print((j,i))
+                #print((j,i))
 
             if case[(j,i)]:
                 screen.blit(surface,rect)
