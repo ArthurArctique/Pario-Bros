@@ -965,7 +965,14 @@ class Players:
         self.cooldown = 0
         self.COOLDOWN = 5
         
-        self.etats = {"grand":"Pario.png","petit":"Pario.png","feu":"ParioFeu.png","etoile":"etoile.png"}
+        self.etats = {"grand":'Pario.png',"petit":"Pario.png","feu":"ParioFeu.png","etoile":"etoile.png"}
+        for etat in self.etats:
+            if etat == 'petit':
+                image = pygame.transform.scale(self.etats['grand'],((self.height * (self.playerSize*0.5) ,self.width * (self.playerSize *0.5))))
+            else:
+                image = pygame.transform.scale(pygame.image.load(f'assets/players/{self.etats[etat]}').convert_alpha(),(self.height * self.playerSize ,self.width * self.playerSize))
+            self.etats[etat] = image
+        
         self.etat = ""
         self.lastEtat = "petit"
         self.sizeOri = self.playerSize
@@ -1024,18 +1031,29 @@ class Players:
     def changeSkin(self,taille):
         #fonction permettant le changement de l'image du joueur selon son etat
         self.lastEtat = self.etat
-        self.original = pygame.image.load('assets/players/{}'.format(self.etats[taille]))
-        x,y = copy.deepcopy(self.rect.x),copy.deepcopy(self.rect.y)
+        self.image = self.etats[taille]
         
         if taille == "petit":
             self.playerSize = self.sizeOri/2
         else:
             self.playerSize = self.sizeOri
-            
-        self.image = pygame.transform.scale(self.original,(self.height * self.playerSize ,self.width * self.playerSize))
-        self.image.scroll(self.image.get_size()[0],self.image.get_size()[1])
+        
+        rectAvt = copy.deepcopy(self.rect)
+
+        print(taille)
+
+        if taille != 'petit':
+            self.rect = self.image.get_rect()
+        if self.check_collision(self.rect.x,self.rect.y)[0] and taille != 'petit':
+            self.rect = rectAvt 
+            return False
+        self.rect.width,self.rect.height = self.height * self.playerSize,self.width * self.playerSize
+
+        self.decalage -= self.rect.width - rectAvt.width
+        #self.image.scroll(self.image.get_size()[0],self.image.get_size()[1])
         self.etat = taille
         self.timer = 0
+        return True
     
     def draw(self):
         #permet l'affichage de l'image du joueur       
@@ -1046,13 +1064,19 @@ class Players:
         
         if self.rect.colliderect(self.rectScreen):
             self.screen.blit(self.image,self.rect)
+            """
+            if self.etat != 'petit':
+                self.screen.blit(self.image,self.rect)  
+            else:
+                self.screen.blit(self.image,(self.rect.x + (self.width * self.playerSize) *0.5,(self.rect.y + self.height * self.playerSize) *1.025 ))   
+            """
     
     def animation(self):
         #permet de modifier le sens de l'image selon la direction choisi par le joueur
         if self.last_dir == "right" and self.dir == "left":
-            self.image = pygame.transform.scale(pygame.transform.flip(self.original, 1, 0),(self.height * self.playerSize,self.width *self.playerSize))
+            self.image = pygame.transform.flip(self.etats[self.etat], 1, 0)
         elif self.last_dir == "left" and self.dir == "right":
-            self.image = pygame.transform.scale(self.original,(self.height * self.playerSize,self.width *self.playerSize))
+            self.image = self.etats[self.etat]
 
     def deplacement(self):
         #fonction permettant le mouvement du joueur selon les touches utilisés, la map ,la gravité
@@ -1276,8 +1300,7 @@ class Mobs:
                     self.phase = 'sortir'
                     
                     self.invisible = False
-
-            
+           
     def animPlant(self) :
         if self.phase == "entrer":
             if self.animCompteur > 60:
@@ -1307,8 +1330,7 @@ class Mobs:
         self.rect.x -= self.decalage
         if self.stop != True :
             self.screen.blit(self.image,self.rect)
-            
-            
+                       
     def eviteLeSuicide(self):
         #fonction permettant aux koopa de ne pas tomber dans le vide meme sans protection en la redirigeant
         if self.name == "koopa.png":
@@ -1327,7 +1349,6 @@ class Mobs:
         elif self.last_dir == "left" and self.dir == "right":
             self.image = pygame.transform.scale(self.original,(self.height * self.playerSize,self.width *self.playerSize))
 
-          
     def deplacement(self):
         # fonction permettant à chaque categorie de monstre d'avoir un deplacement different et avoir des changements de sens si il y a une collision
         self.speedHori *= 0.88
@@ -1442,19 +1463,26 @@ class Mobs:
                             if pygame.Rect.colliderect(self.rect,world.monstre[mobs].rect):
                                 world.monstre[mobs].est_mort = True
                             
-        else:
+        else:   
+            fautmourrir = True
             if pygame.Rect.colliderect(self.rect, joueur.rect) and not self.est_mort:
                 # Rencontres entre les diverses pouvoirs et le joueur qui va occasionner le changement de forme du joueur
                 if self.name == "champi.png" and joueur.etat == "petit":
                     #verification d'un conctact block/joueur quand il grandis et le deplace d'un des deux cotés si il y a contact pour ne pas rester bloquer dans le block
+                    
                     if joueur.check_collision(-int(self.screen.get_size()[1]/15),0):
                         joueur.pos.x += int(self.screen.get_size()[1]/15)
                         
                     if joueur.check_collision(int(self.screen.get_size()[1]/15),0):
                         joueur.pos.x -= int(self.screen.get_size()[1]/15)
-                        
-                    joueur.changeSkin("grand")
+
+                    avant = (copy.deepcopy(joueur.rect),joueur.image.copy())
+                    if not joueur.changeSkin("grand"):
+                        joueur.rect,joueur.image = avant
+                        fautmourrir = False
                     
+
+                        
                 elif self.name == "champi.png" and joueur.etat == "etoile" and joueur.lastEtat == "petit":
                     joueur.lastEtat = "grand"
                 
@@ -1469,14 +1497,24 @@ class Mobs:
                             joueur.lastEtat = "feu"
                         
                     elif joueur.etat == "petit" :
-                        joueur.changeSkin("grand")
+                        avant = (copy.deepcopy(joueur.rect),joueur.image.copy())
+                        if not joueur.changeSkin("grand"):
+                            joueur.rect,joueur.image = avant
+                            fautmourrir = False
                     else:
-                        joueur.changeSkin("feu")
+                        avant = (copy.deepcopy(joueur.rect),joueur.image.copy())
+                        if not joueur.changeSkin("feu"):
+                            joueur.rect,joueur.image = avant
+                            fautmourrir = False
 
                 if self.name == "star.png":
-                    joueur.changeSkin("etoile")
+                    avant = (copy.deepcopy(joueur.rect),joueur.image.copy())
+                    if not joueur.changeSkin("etoile"):
+                        joueur.rect,joueur.image = avant
+                        fautmourrir = False
 
-                self.est_mort = True
+                if fautmourrir:
+                    self.est_mort = True
                 
     def check_collision(self, x, y):
         #fonction regardant les collisions entre le joueur et la map
