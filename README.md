@@ -34,8 +34,8 @@ Nous avons également inclus un écran d'accueil par naviguer de niveaux en nive
 A partir de ce menu , on peut acceder aux options grace à l'engrenage en haut à gauche. Comme le menu pour changer ses touches ou la résolution du jeu 
 
 <p float="left">
-  <img src="https://github.com/ArthurArctique/Pario-Bros/blob/202646996cfc267556427777a08f81b4e34b0a61/Pour%20le%20readme/touche.png" width="500" />
-  <img src="https://github.com/ArthurArctique/Pario-Bros/blob/202646996cfc267556427777a08f81b4e34b0a61/Pour%20le%20readme/resolu.png" width="500" />
+  <img src="https://github.com/ArthurArctique/Pario-Bros/blob/202646996cfc267556427777a08f81b4e34b0a61/Pour%20le%20readme/touche.png" width="400" />
+  <img src="https://github.com/ArthurArctique/Pario-Bros/blob/202646996cfc267556427777a08f81b4e34b0a61/Pour%20le%20readme/resolu.png" width="400" />
 </p>
 
 
@@ -43,8 +43,8 @@ Afin de naviguer entre les différents niveaux , une carte est disponible. Indic
 Une carte pour choisir le monde est aussi disponible bien que les autres mondes ne soient pas accessible car nous n'avons pas eu le temps de créer des images différentes pour chaque continents ainsi que de créer plusieurs niveau par monde.
 
 <p float="left">
-    <img src="https://github.com/ArthurArctique/Pario-Bros/blob/e14013a46ee3a43bffff0e3d42bdd2a239a0d7ff/Pour%20le%20readme/carte.png" width="500">
-    <img src="https://github.com/ArthurArctique/Pario-Bros/blob/fd9dda3ab41c235e36f7c03185bb4d98b00c0dac/Pour%20le%20readme/monde.png" width="500">
+    <img src="https://github.com/ArthurArctique/Pario-Bros/blob/e14013a46ee3a43bffff0e3d42bdd2a239a0d7ff/Pour%20le%20readme/carte.png" width="400">
+    <img src="https://github.com/ArthurArctique/Pario-Bros/blob/fd9dda3ab41c235e36f7c03185bb4d98b00c0dac/Pour%20le%20readme/monde.png" width="400">
 </p>
 
 
