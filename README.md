@@ -23,7 +23,7 @@ Vous aurez donc besoin de lancer ces commandes si vous ne disposez pas déjà de
 ```
     
 ## Fonctionnalités:
-Notre jeu Mario en Python avec Pygame est 100% fonctionnel. Le gameplay est fluide et respecte les codes posés par les jeu mario que nous avons utilisé comme référence. 
+Super Pario Bros est fonctionnel et on a rempli les conditions que l'on pense sont nécessaires pour qu'on puisse se dire fier de notre projet au vu de nos ambitions. Le gameplay est fluide et respecte les codes posés par les jeu mario que nous avons utilisé comme référence. Affrontez des défis en tant que fière baguette et traversez l'Europe dans différents niveaux tous plus différent et original les un que les autres.
 
 
 ## Les menus
@@ -31,7 +31,7 @@ Nous avons également inclus un écran d'accueil par naviguer de niveaux en nive
 
 ![Screenshot](https://github.com/ArthurArctique/Pario-Bros/blob/547df32811bdfa57065bec6eb9eaa222520ec985/Pour%20le%20readme/ecranA.png)
 
-A partir de ce menu , on peut acceder aux options grace à l'engrenage en haut à gauche. Comme le menu pour changer ses touches ou la résolution du jeu 
+A partir de ce menu , on peut accéder aux options grâce à l'engrenage en haut à gauche. Comme le menu pour changer ses touches ou la résolution du jeu 
 
 <p float="left">
   <img src="https://github.com/ArthurArctique/Pario-Bros/blob/202646996cfc267556427777a08f81b4e34b0a61/Pour%20le%20readme/touche.png" width="400" />
@@ -39,8 +39,8 @@ A partir de ce menu , on peut acceder aux options grace à l'engrenage en haut �
 </p>
 
 
-Afin de naviguer entre les différents niveaux , une carte est disponible. Indicant quel niveau terminer pour en débloquer un autre. Sauf pour Paris où il va falloir remplir une condition spéciale.
-Une carte pour choisir le monde est aussi disponible bien que les autres mondes ne soient pas accessible car nous n'avons pas eu le temps de créer des images différentes pour chaque continents ainsi que de créer plusieurs niveau par monde.
+Afin de naviguer entre les différents niveaux , une carte est disponible. Indiquant quel niveau terminer pour en débloquer un autre. Sauf pour Paris où il va falloir remplir une condition spéciale.
+Une carte pour choisir le monde est aussi disponible bien que les autres mondes ne soient pas accessibles, car nous n'avons pas eu le temps de créer des images différentes pour chaques continents ainsi que de créer plusieurs niveaux par monde.
 
 <p float="left">
     <img src="https://github.com/ArthurArctique/Pario-Bros/blob/e14013a46ee3a43bffff0e3d42bdd2a239a0d7ff/Pour%20le%20readme/carte.png" width="400">
@@ -50,7 +50,7 @@ Une carte pour choisir le monde est aussi disponible bien que les autres mondes 
 
 ## Des monstres et pouvoirs
 
-Nous avons également integré plusieurs monstres et pouvoir , ainsi que différents niveaux à explorer. Toute les images ont été réalisé par arthur ou sont disponible sur internet et libre de droit.
+Nous avons également intégré plusieurs monstres et pouvoirs , ainsi que différents niveaux à explorer. Toutes les images ont été réalisées par Arthur ou sont disponible sur Internet et libre de droit.
 
 <p float="left">
   <img src="https://github.com/ArthurArctique/Pario-Bros/blob/603791e9b26d0d7abedaf8d781b394af9098a2c9/Pour%20le%20readme/champi.png" width="100" height="100">
@@ -61,7 +61,7 @@ Nous avons également integré plusieurs monstres et pouvoir , ainsi que différ
 
 ## Des niveaux originaux et punitif 
 
-A vous de vaincre nos 5 niveaux , avec un dernier niveau un peu spécial pour finir le monde. Attention , certain niveaux peuvent paraitre simple mais les personnes les ayant créé ne vous ont pas fais des cadeaux. Dans certaines situations tomber même au sol peut être égal à perdre une vie.
+A vous de vaincre nos 5 niveaux, avec un dernier niveau un peu spécial pour finir le monde. Attention, certains niveaux peuvent paraître simples, mais les personnes les ayant créé ne vous ont pas fait de cadeaux. Dans certaines situations tomber même au sol peut être égal à perdre une vie.
 
 <img src="https://github.com/ArthurArctique/Pario-Bros/blob/63c3c5ab388186d19268ecbac69bb8a479a93eb8/Pour%20le%20readme/exemple.png" width="1000">
 
