@@ -647,12 +647,8 @@ class Jeu:
         self.villesEU = {'rennes' : [(255,0,0)],'londres' : [(255,255,0)],'copenhague' : [(0,255,255)],'st-petersbourg' : [(255,0,255)],'athenes' : [(0,255,0)],'paris' : [(0,0,255)]}
         for ville in self.villesEU:
             self.villesEU[ville].append(f'{ville}.txt')
-            if not 'paris' in ville:
-                self.villesEU[ville].append(os.listdir(f'Europe/assets'))
+            self.villesEU[ville].append(os.listdir(f'Europe/assets'))
 
-            #else:
-            #    self.villesEU[ville].append(os.listdir(f'Europe/special/{ville}/assets'))
-            # J'ai pas les fichier donc ça plante
         
         
         self.allWorlds = {'Europe' : self.villesEU,'Moyen-orient' : None,'Amérique du nord' : None,'Amérique du sud' : None}  
