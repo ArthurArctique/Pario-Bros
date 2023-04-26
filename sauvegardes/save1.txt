@@ -1,4 +1,4 @@
 M:['Europe']
-N:['st-petersbourg', 'rennes']
-V:[4, 6, 6, 6]
-S:[0, 0]
+N:['st-petersbourg', 'rennes', 'londres']
+V:[3, 6, 6, 6]
+S:[22, 0]
