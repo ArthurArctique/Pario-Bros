@@ -2177,10 +2177,9 @@ class BouleDeFeu:
         self.pos = pos.copy()
         joueur = jeu.classDict['monde'].players["Pario.png"]
         self.pos[1]-= joueur.rect[3]/2.5
-        self.pos[0]+= 5 *dir
         self.rect = pygame.Rect(pos[0],pos[1],20,20)
-        self.speedVerti = 5
-        self.speedHori = 15 * dir
+        self.speedVerti = round(self.screen.get_size()[0]*0.0035)
+        self.speedHori = round(self.screen.get_size()[0]*0.0105) * dir
         self.gravity = self.screen.get_size()[1] * 0.0015
         self.decalage = decalage
         self.limite = 0
