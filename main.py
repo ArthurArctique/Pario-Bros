@@ -963,7 +963,8 @@ class Players:
         self.rectScreen = self.screen.get_rect()
         self.timer = 0
         self.cooldown = 0
-        self.COOLDOWN = 5
+        
+        self.COOLDOWN = round(self.screen.get_size()[0]*0.0138)
         
         self.etats = {"grand":'Pario.png',"petit":"Pario.png","feu":"ParioFeu.png","etoile":"etoile.png"}
         for etat in self.etats:
