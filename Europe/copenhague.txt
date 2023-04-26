@@ -1,14 +1,15 @@
-                                                                                                                                T      EEE
-                                                                                                                                T
-                                                                                                                                T              #               ??                                          
-                                                                                                                       #?#?#    t                      OOO                                                  
-                                                                                              ##                                                      EEEE                                                 f
-                                                                                  OOOOO                              OOOOO                                    EEEE                                 EE      f
-                                                                     t          EEEEEEE                        #    EEEEE       t                                                                 EEE      f
-                                                               OOOOOOT    #                V      V     EEEE                    T                                                                EEEE      f
-                                                            ###########                                                         T                                                               EEEEE      f
-                       K                                                                                                        T                                                              EEEEEE      f
-                     ####L##                         t                                                                          T                                                             EEEEEEE      f
-                                                     T                                                                          T                                                            EEEEEEEE      f
-                     OOOOOO          OOOO            T                  K    OOOOOO       M        K                      EE    T           K     OOOOO                            M        EEEEEEEEE      f
-G         G       G       G       G       G       G               G       G       G       G       G       G       G             G       G                          G       G       G       G       G       G       G       G       G
+       
+       
+                                                                                                                                                                                                           f
+                                                                           #  F?                                                                                                                           f
+                                                                           #            OOO                                                                                                                f
+                                                                           #          ######                                                                                                       EE      f
+                                                                           #                                                                                                                      EEE      f
+                                                                           #######                              ?#                                                                               EEEE      f
+                            P  OOO                                         #                                                                                                                    EEEEE      f
+                            t ####                                         #                                                                                                                   EEEEEE      f
+  #L##                      T                                                       ##                   t                                          #?##                                      EEEEEEE      f
+                   EEEEE    T                                                                            T     EEEEE     t                          #                                        EEEEEEEE      f
+             t              T       EEEE  EE     T                  OO                    OOOO     K     T               T          M      M        #      K   OOOOOO   M       M           EEEEEEEEE      f
+             T              T                    T      EEG       G           OO   G       G       G                     G      G       G      G       G       G       G       G       G       G       G       G
+##########   T              T                    T                           EEEE
