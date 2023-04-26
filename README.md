@@ -57,6 +57,7 @@ Nous avons également intégré plusieurs monstres et pouvoirs , ainsi que diff�
   <img src="https://github.com/ArthurArctique/Pario-Bros/blob/603791e9b26d0d7abedaf8d781b394af9098a2c9/Pour%20le%20readme/star.png" width="100" height="100">
   <img src="https://github.com/ArthurArctique/Pario-Bros/blob/603791e9b26d0d7abedaf8d781b394af9098a2c9/Pour%20le%20readme/fireflower.png" width="100" height="100">
   <img src="https://github.com/ArthurArctique/Pario-Bros/blob/2e0cb301db9ce91b0348f9e09b10b9d1f1d25981/Pour%20le%20readme/pooka.png" width="100" height="100">
+   <img src="https://github.com/ArthurArctique/Pario-Bros/blob/2e0cb301db9ce91b0348f9e09b10b9d1f1d25981/Pour%20le%20readme/pumba.png" width="100" height="100">
 </p>
 
 ## Des niveaux originaux et punitif 
