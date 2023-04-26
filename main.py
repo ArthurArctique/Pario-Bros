@@ -686,6 +686,7 @@ class Jeu:
         self.carteMonde = None
     
     def chargement(self,chemin,load = False):
+        """Charge des images dans la mémoire"""
         self.fade = 0
         c2 = 0
         if not load:
@@ -702,6 +703,7 @@ class Jeu:
             c2 += 1       
     
     def inputs(self):
+        """recupere les interactions que le joueur fait et quitte le jeu si on appuye sur la croix"""
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -716,6 +718,7 @@ class Jeu:
                     self.classDict['menu'].changeKey[0] = False
         
     def carte(self):
+        """charge et affiche la carte de sélection des niveaux"""
         try:
             if self.fade < 255:
                 self.fade += 5
@@ -824,6 +827,7 @@ class Jeu:
         self.screen.blit(stop,stopRect)
 
     def choixMonde(self):
+        """charge et affiche la carte de selection des mondes """
         if self.carteMonde == None:
             self.carteMonde = pygame.transform.scale(pygame.image.load('assets/world/others/monde.png').convert_alpha(),self.screenSize)
             self.screen.fill('lightblue')
@@ -872,6 +876,7 @@ class Jeu:
                     self.screen.blit(self.font2.render(f"Débloquez d'abord {list(self.allWorlds)[list(self.allWorlds).index(monde) -1]} ",True,(200,0,0)),(0,0))
                           
     def get_txt(self,chemin):
+        """renvoie dans une liste , le contenu d'un fichier txt"""
         file = open(f'{chemin}', 'r')
         data = file.read()
         liste = data.split("\n")
@@ -879,6 +884,7 @@ class Jeu:
         return liste
 
     def dicoInstru(self,liste):
+        """récupere les valeurs du fichier txt correspondant au différents bloc et a leur caractéristique et les stoque dans un dictionnaire"""
         dict_ = {}
         for i in liste:
             c = 0
@@ -912,6 +918,7 @@ class Jeu:
         return dict_
 
     def savoirSiFloat(self,elt) -> bool:
+        """Renvoie true si elt est est un float , False sinon"""
         try:
             float(elt)
             return True
@@ -919,6 +926,7 @@ class Jeu:
             return False
         
     def on_est_ou(self):
+        """En fonction de l'écran qui doit etre afficher , appelle les fonctions correspondantes a celui ci et afficher les fps si le joueur l'a selectionné dans les options"""
         if self.position == 'choix monde':
             self.choixMonde()
             self.cooldown += 1
@@ -930,6 +938,7 @@ class Jeu:
             self.screen.blit(jeu.font2.render(f'{int(self.clock.get_fps())} FPS',True,(0,0,0)),(0,self.screenSize[1] - self.police))
         
     def update(self):
+        """fonction qui appelle toute les fonctions nécessaire au bon fonctionnement de la classe"""
         self.on_est_ou()
         if self.classPos != '':
             self.classDict[self.classPos].update()
@@ -963,7 +972,8 @@ class Players:
         self.rectScreen = self.screen.get_rect()
         self.timer = 0
         self.cooldown = 0
-        self.COOLDOWN = 5
+        
+        self.COOLDOWN = round(self.screen.get_size()[0]*0.0138)
         
         self.etats = {"grand":'Pario.png',"petit":"Pario.png","feu":"ParioFeu.png","etoile":"etoile.png"}
         for etat in self.etats:
@@ -1009,10 +1019,16 @@ class Players:
         if self.touchable :  
             if self.etat == "petit":
                 self.est_mort = True
-            else:
+            elif self.etat == 'grand':
                 self.touchable = False
                 self.etat = "petit"
-                self.changeSkin(self.etat)
+
+            elif self.etat == 'feu':
+                self.touchable = False
+                self.etat = "grand"
+            
+            
+            self.changeSkin(self.etat)              
     
     def powerUse(self):
         # modifie les parametres et permet d'obtenir les pouvoirs
@@ -1040,17 +1056,13 @@ class Players:
         
         rectAvt = copy.deepcopy(self.rect)
 
-        print(taille)
-
         if taille != 'petit':
             self.rect = self.image.get_rect()
         if self.check_collision(self.rect.x,self.rect.y)[0] and taille != 'petit':
             self.rect = rectAvt 
             return False
+        
         self.rect.width,self.rect.height = self.height * self.playerSize,self.width * self.playerSize
-
-        self.decalage -= self.rect.width - rectAvt.width
-        #self.image.scroll(self.image.get_size()[0],self.image.get_size()[1])
         self.etat = taille
         self.timer = 0
         return True
@@ -1064,12 +1076,7 @@ class Players:
         
         if self.rect.colliderect(self.rectScreen):
             self.screen.blit(self.image,self.rect)
-            """
-            if self.etat != 'petit':
-                self.screen.blit(self.image,self.rect)  
-            else:
-                self.screen.blit(self.image,(self.rect.x + (self.width * self.playerSize) *0.5,(self.rect.y + self.height * self.playerSize) *1.025 ))   
-            """
+
     
     def animation(self):
         #permet de modifier le sens de l'image selon la direction choisi par le joueur
@@ -1132,7 +1139,7 @@ class Players:
                         if i[2][13]:
                             self.invincible = True
                             jeu.classDict['monde'].finito = True
-                        tempo = copy.deepcopy(i) #tout les jours fuck le systeme de pointage jsp quoi de python all my homis hate this shit heuresement que copy existe 
+                        tempo = copy.deepcopy(i)
                         if i[2][8] and tempo[2][9]:
                             tempo[2][9] = False
                             self.blockRECT[e][c] = tempo
@@ -1198,7 +1205,7 @@ class Players:
         
         if self.check_collision(0, -1)[0]:
             self.speedVerti = 0
-
+        
     def timerfunc(self):
         self.timer +=1
         if self.timer > 60*10:
@@ -1217,7 +1224,7 @@ class Players:
     
     def update(self):
         #boucle player avec les diverses fonctions pour la taille, le deplacement, les pouvoirs, ...
-        self.cooldown += 1
+        self.cooldown += 1 
         self.deplacement()
         self.animation()
         self.powerUse()
@@ -1238,6 +1245,7 @@ class Mobs:
         self.doitTuerJoueur = doitTuerJoueur
         self.height, self.width = self.original.get_size()
         self.image = pygame.transform.scale(self.original,(self.height * self.playerSize ,self.width * self.playerSize))
+        
         #variable poru modifier la taille d'un certain type d'entité
         if self.name == "plant.png":
             self.image = pygame.transform.scale(self.original,(self.height * self.playerSize *2 ,self.width * self.playerSize*2))
@@ -1302,8 +1310,9 @@ class Mobs:
                     self.invisible = False
            
     def animPlant(self) :
+        """en fonction de l'état de la plante (entrer ou sorti) , la déplace sur l'axe y """
         if self.phase == "entrer":
-            if self.animCompteur > 60:
+            if self.animCompteur > round(self.screen.get_size()[0]*0.042):
                 self.phase = ""
             else:
                 self.animCompteur +=1
@@ -1407,6 +1416,7 @@ class Mobs:
         self.rectDroit[0] = self.rect[0] + 2*self.rectDroit[2]
 
     def collisionJoueur(self,joueur):
+
         # fonction verifiant la collision des monstres avec le joueur dans les diverses possibilités(mario etoile,mario tape sur le cote,...)
         if self.doitTuerJoueur and not self.invisible : 
             if not self.affaibli:
@@ -1415,7 +1425,9 @@ class Mobs:
                     self.left = False
                     self.right = False
                     self.est_mort = True
+                    print("ouch1")
                     joueur.speedVerti = -joueur.jumpspeed
+
 
                 elif pygame.Rect.colliderect(self.rect, joueur.rect) and not self.est_mort and joueur.speedVerti <= 0:
                     #si le joueur arrive de cote
@@ -1423,6 +1435,8 @@ class Mobs:
                         joueur.toucher()
                     else:
                         self.est_mort = True
+                        print("ouch2")
+                        
             else:#condition si le monstres est un koopa sous forme de carapace
 
                 if not pygame.Rect.colliderect(self.rectGauche, joueur.rect) and not pygame.Rect.colliderect(self.rectDroit, joueur.rect) and pygame.Rect.colliderect(self.rectHaut, joueur.rect) and not self.est_mort:
@@ -1432,11 +1446,13 @@ class Mobs:
                     
                     if joueur.invincible:
                         self.est_mort = True
+                        print("ouch3")
         
                 elif pygame.Rect.colliderect(self.rectGauche, joueur.rect) :
                     
                     if joueur.invincible:
                         self.est_mort = True
+                        print("ouch4")
                     
                     elif not self.right and not self.left:
                         self.left = False
@@ -1448,6 +1464,7 @@ class Mobs:
                     
                     if joueur.invincible:
                         self.est_mort = True
+                        print("ouch5")
                         
                     elif not self.right and not self.left:
                         self.right = False
@@ -1513,9 +1530,11 @@ class Mobs:
                         joueur.rect,joueur.image = avant
                         fautmourrir = False
 
+                if self.name == "plant.png":
+                    fautmourrir = False
+
                 if fautmourrir:
                     self.est_mort = True
-                
     def check_collision(self, x, y):
         #fonction regardant les collisions entre le joueur et la map
         collide = False
@@ -1581,9 +1600,10 @@ class Mobs:
             self.affaibli = True
             self.repetition = False
             self.vol = False
-            self.speed = 10
+            self.speed = round(self.screen.get_size()[0] * 0.002083) *4
     
     def update(self):
+        "fonction qui appelle toute les fonctions nécessaire au bon fonctionnement de la classe (est appeller a chaque image dans la classe world et ceux pour chaque monstre)"
         if self.est_mort :
             return self.realName
         self.eviteLeSuicide()
@@ -1752,7 +1772,10 @@ class World:
         self.ligneVide = []
         self.compteurNext = 0
 
+        self.quaranteNeufAlinea3 = False
+
     def chargement(self):
+        """Charge en memoire les différentes images qui seront afficher dans les niveaux"""
         c = 0
         self.screen.fill('black')
         txt = jeu.font.render(f"{jeu.world}-{self.name}",True,(255,255,255))
@@ -1788,6 +1811,8 @@ class World:
         self.players["Pario.png"] = Players(self.screen,self.blockRECT,"Pario.png",True,jeu.classDict['menu'].touchesDict,self.name)
 
     def initialiseDicoBloc(self):
+        """Crée un dictionnaire qui va stocker en clé le symbole représentant un bloc dans le fichier txt qui décrit le niveaux et qui va mettre dans une liste associé a cette clé , tout les blocs lui correspondant
+        ainsi que leur position et un rectangle"""
         self.blockRECT = {}
         for i in self.instruDict:
             self.blockRECT[i] = []
@@ -1798,6 +1823,7 @@ class World:
                     self.blockRECT[instru].append([rect,instru,self.instruDict[instru]])
 
     def mort(self):
+        """Si le joueur est mort , lui enleve une vie sur sa sauvegarde. Si le joueur n'a plus de vie , il pert la progression dans le mondes"""
         c = 0
         for i in self.players:
             if self.players[i].rect.y >= self.screen.get_size()[1] or self.players[i].est_mort:
@@ -1872,6 +1898,7 @@ class World:
                     self.stop.pop(element)
                 
     def elementIntoListe(self):
+        """Parcout la liste qui contient le fichier txt correspondant a un niveau et renvoie une liste avec le symbole du bloc ainsi que sa position """
         for ligne in range(len(self.world)):
             if self.world[ligne] != '':
                 for e in range(len(self.world[ligne])):
@@ -1884,6 +1911,7 @@ class World:
         self.screen.blit(self.othersIMG[f'fond.png'],(-self.decalage,-self.screen.get_size()[0]*0.07))
 
     def draw_on_screen(self):
+        """Affiche sur l'écran les pieces et les vies , les blocs du niveaux , les fps , et si un niveau est terminé , débloque le prochain (Avec conditions spéciale pour un certain niveau) """
         
         txt = str(self.sauvegarde['S'][0])
         if len(txt) == 1:
@@ -1912,12 +1940,15 @@ class World:
         
         fps = round(jeu.clock.get_fps(),1)
 
-        if self.compteurEcrFin / fps > self.TPSECRWIN:
+        if self.compteurEcrFin / fps >= self.TPSECRWIN:
             jeu.position = 'carte'
             jeu.classPos = ''
             if not list(jeu.villesEU)[list(jeu.villesEU).index(self.name)+1] in self.sauv['N']:
                 self.sauv['N'].append(list(jeu.villesEU)[list(jeu.villesEU).index(self.name)+1])
             
+            if self.name == 'rennes' and self.sauvegarde['S'][0] == 49 and self.sauvegarde['V'][0] == 3:
+                self.sauv['N'].append('paris')
+
             self.save()
         
         if jeu.classDict['menu'].settingsDict['ShowFPS']:
@@ -1928,7 +1959,8 @@ class World:
         fonction permettant le deplacement de l'ecran sur la map selon les deplacement du joueur
         """
         for name in self.players:
-            if self.players[name].rect.x-self.players[name].decalage >= self.width*0.55-self.decalage:
+            if self.players[name].rect.x >= self.width*0.55 and self.players[name].dir == 'right':
+                self.players[name].rect.x = self.width*0.55-1000
                 self.decalage += self.players[name].speedHori
                 self.players[name].decalage = self.decalage
                 for nameMonstre in self.monstre :
@@ -1936,23 +1968,28 @@ class World:
                 for boule in self.players[name].bouleDeFeu:
                     boule.decalage = self.decalage
 
-            if self.players[name].rect.x-self.players[name].decalage <= self.width*0.45-self.decalage and self.decalage>0:     
+            if self.players[name].rect.x <= self.width*0.45 and self.decalage>0 and self.players[name].dir == 'left':  
+                self.players[name].rect.x = self.width*0.55+1
                 self.decalage += self.players[name].speedHori
                 self.players[name].decalage = self.decalage
                 for nameMonstre in self.monstre :
                     self.monstre[nameMonstre].decalage = self.decalage
                 for boule in self.players[name].bouleDeFeu:
                     boule.decalage = self.decalage  
+
     def inputsMouse(self):
+        """Récupere la position de la souris a tout moment et quand le joueur clique"""
         self.Mpos = pygame.mouse.get_pos()
         self.mouseDown = pygame.mouse.get_pressed()
     
     def save(self):
+        """Supprime une sauvegarde et crée une nouvelle sauvegarde vide""" 
         os.remove(f'sauvegardes/save{jeu.classDict["menu"].cSauv}.txt')
         lVal = list(self.sauvegarde.values())
         jeu.classDict['menu'].nouvelle_sauvegarde(lVal[0],lVal[1],lVal[2],lVal[3][0],lVal[3][1])
 
     def special(self):
+        """Gere le niveau spécial Tetris"""
         
         surface = pygame.Surface((int(self.colonnes * self.case),int(self.case * self.lignes)))
         surface.set_alpha(200)
@@ -2121,6 +2158,8 @@ class World:
                 pygame.draw.rect(self.screen,(0,0,0),copie,1)
     
     def update(self):
+        """fonction qui appelle toute les fonctions nécessaire au bon fonctionnement de la classe , appelle les fonction pour faire apparaitre les monstres
+        gérer le scrolling de l'écran  """
         self.cooldown += 1
         if self.compteur < 1:
             self.monstres()
@@ -2159,11 +2198,11 @@ class BouleDeFeu:
         self.blockRECT = blockRECT
         self.ville = ville
         self.pos = pos.copy()
-        self.pos[1]-= 25
-        self.pos[0]+= 5 *dir
+        joueur = jeu.classDict['monde'].players["Pario.png"]
+        self.pos[1]-= joueur.rect[3]/2.5
         self.rect = pygame.Rect(pos[0],pos[1],20,20)
-        self.speedVerti = 5
-        self.speedHori = 5 * dir
+        self.speedVerti = round(self.screen.get_size()[0]*0.0035)
+        self.speedHori = round(self.screen.get_size()[0]*0.0105) * dir
         self.gravity = self.screen.get_size()[1] * 0.0015
         self.decalage = decalage
         self.limite = 0
@@ -2178,12 +2217,12 @@ class BouleDeFeu:
             self.asupprimer = True
 
 
-        if self.pos.y < self.limite-50:
-            self.speedVerti = 5
+        if self.pos.y < self.limite-round(self.screen.get_size()[0]*0.0347):
+            self.speedVerti = round(self.screen.get_size()[0]*0.0035)
 
 
         if onground and self.speedVerti > 0:
-            self.speedVerti = -5
+            self.speedVerti = - round(self.screen.get_size()[0]*0.0035)
             self.limite = self.pos.y
 
         self.move(self.speedHori, self.speedVerti)
@@ -2248,7 +2287,6 @@ class BouleDeFeu:
         self.deplacement()
         self.draw()     
         self.tueMob()
-   
         
 jeu = Jeu()
 while True :
