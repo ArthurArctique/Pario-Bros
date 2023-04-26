@@ -1974,7 +1974,7 @@ class World:
         fonction permettant le deplacement de l'ecran sur la map selon les deplacement du joueur
         """
         for name in self.players:
-            if self.players[name].rect.x-self.players[name].decalage >= self.width*0.55-self.decalage:
+            if self.players[name].rect.x-self.players[name].decalage >= self.width*0.55-self.decalage and self.players[name].dir == "right" :
                 self.decalage += self.players[name].speedHori
                 self.players[name].decalage = self.decalage
                 for nameMonstre in self.monstre :
@@ -1982,7 +1982,7 @@ class World:
                 for boule in self.players[name].bouleDeFeu:
                     boule.decalage = self.decalage
 
-            if self.players[name].rect.x-self.players[name].decalage <= self.width*0.45-self.decalage and self.decalage>0:     
+            if self.players[name].rect.x-self.players[name].decalage <= self.width*0.45-self.decalage and self.decalage>0 and self.players[name].dir == "left":     
                 self.decalage += self.players[name].speedHori
                 self.players[name].decalage = self.decalage
                 for nameMonstre in self.monstre :
