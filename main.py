@@ -1301,7 +1301,7 @@ class Mobs:
            
     def animPlant(self) :
         if self.phase == "entrer":
-            if self.animCompteur > 60:
+            if self.animCompteur > round(self.screen.get_size()[0]*0.042):
                 self.phase = ""
             else:
                 self.animCompteur +=1
@@ -1589,7 +1589,7 @@ class Mobs:
             self.affaibli = True
             self.repetition = False
             self.vol = False
-            self.speed = 10
+            self.speed = round(self.screen.get_size()[0] * 0.002083) *4
     
     def update(self):
         if self.est_mort :
