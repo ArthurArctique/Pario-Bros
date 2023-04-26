@@ -150,6 +150,8 @@ class Menu:
             c = -1
             for i in self.dictVanilla[clef]:
                 c += 1
+                if self.menuIMG['chargement.png'].get_size()[0] != self.screenSize[0]:
+                    self.menuIMG['chargement.png'] = pygame.transform.scale(self.menuIMGoriginal['chargement.png'],self.screenSize)
                 surface = self.menuIMG['chargement.png']
                 surface.set_alpha(c2/2.5)
                 self.screen.fill((0,0,0))
@@ -297,8 +299,7 @@ class Menu:
                 self.screen.blit(select,(self.screenSize[0] - select.get_rect().width,0))
                 c += 1
         except:
-            text = "Erreur d'affichage, image probablement corrompue elle s'est prise pour un dirgeant africain" #on va pas la garder celle la 
-            traceback.print_exc()
+            text = "Erreur d'affichage"
             self.screen.blit(jeu.font2.render(text,True,(255,255,255)),(0,0))
             
         if not self.stop:
@@ -448,7 +449,7 @@ class Menu:
             retour = jeu.font2.render('Retour',True,(0,0,255))
         
         self.screen.blit(retour,rrect)
-        resolutions = [0.25,0.5,0.75,'fullscreen']
+        resolutions = [0.5,0.75,'fullscreen']
         reglages = {'Résolution' : resolutions,'Réglages lié aux Chargements': [f'Chargements : {self.settingsDict["Chargements"]} (/!\ va entrainer un écran de chargement)',f'Affichez les FPS : {self.settingsDict["ShowFPS"]}']}
         compteur = -1
         if self.trouve == []:
@@ -760,7 +761,7 @@ class Jeu:
             self.screen.blit(fond,(self.screenSize[0]*0.07 ,self.screenSize[1]*0.09))
             self.screen.blit(self.font.render(self.information[:1].upper()+self.information[1:],True,(10,10,10)),(self.screenSize[0]*0.07,self.screenSize[1]*0.09))
         except:
-            traceback.print_exc()
+            pass
 
         
         if not self.stop:
@@ -966,7 +967,7 @@ class Players:
         self.speedVerti = 0
         self.speedHori = 0
         self.gravity = self.screen.get_size()[1] * 0.0015
-        self.min_jumpspeed = 4
+        self.min_jumpspeed = round(jeu.screenSize[0] * 0.003)
         self.prev_key = pygame.key.get_pressed()
         self.est_mort = False
         self.rectScreen = self.screen.get_rect()
@@ -1076,7 +1077,12 @@ class Players:
         
         if self.rect.colliderect(self.rectScreen):
             self.screen.blit(self.image,self.rect)
-
+            """
+            if self.etat != 'petit':
+                self.screen.blit(self.image,self.rect)  
+            else:
+                self.screen.blit(self.image,(self.rect.x + (self.width * self.playerSize) *0.5,(self.rect.y + self.height * self.playerSize) *1.025 ))   
+            """
     
     def animation(self):
         #permet de modifier le sens de l'image selon la direction choisi par le joueur
@@ -1239,8 +1245,11 @@ class Mobs:
         self.blockRECT = blockRECT
         self.playerSize = self.screen.get_size()[0] * 0.00003
         self.decalage = 0 
-        self.original = pygame.image.load('assets/monstres/{}'.format(name))
-        self.speed = round(screen.get_size()[0] * 0.002083)
+        if ville != 'paris':
+            self.original = pygame.image.load('assets/monstres/{}'.format(name))
+        else:
+            self.original = pygame.image.load('assets/monstres_paris/{}'.format(name))
+        self.speed = round(screen.get_size()[0] * 0.002083,2)
         self.name = name
         self.doitTuerJoueur = doitTuerJoueur
         self.height, self.width = self.original.get_size()
@@ -1256,7 +1265,6 @@ class Mobs:
         self.speedVerti = 0
         self.speedHori = 0
         self.gravity = self.screen.get_size()[1] * 0.0015
-        self.min_jumpspeed = 4
         self.timer = randint(0,60)
         self.invisible = False
         self.est_mort = False
@@ -1281,7 +1289,7 @@ class Mobs:
             self.right = True
         
         # differentes conditions selon le type du monstre
-        if self.name == "koopa.png":
+        if self.name == "pooka.png":
             self.repetition = True
         
         if self.name == "cannon.png":#cannon avec des missiles allant vers la droite
@@ -1341,8 +1349,8 @@ class Mobs:
             self.screen.blit(self.image,self.rect)
                        
     def eviteLeSuicide(self):
-        #fonction permettant aux koopa de ne pas tomber dans le vide meme sans protection en la redirigeant
-        if self.name == "koopa.png":
+        #fonction permettant aux pooka de ne pas tomber dans le vide meme sans protection en la redirigeant
+        if self.name == "pooka.png":
             if not self.check_collision(3,3):
                 self.right = False
                 self.left = True
@@ -1435,8 +1443,6 @@ class Mobs:
                         joueur.toucher()
                     else:
                         self.est_mort = True
-                        print("ouch2")
-                        
             else:#condition si le monstres est un koopa sous forme de carapace
 
                 if not pygame.Rect.colliderect(self.rectGauche, joueur.rect) and not pygame.Rect.colliderect(self.rectDroit, joueur.rect) and pygame.Rect.colliderect(self.rectHaut, joueur.rect) and not self.est_mort:
@@ -1499,7 +1505,6 @@ class Mobs:
                         fautmourrir = False
                     
 
-                        
                 elif self.name == "champi.png" and joueur.etat == "etoile" and joueur.lastEtat == "petit":
                     joueur.lastEtat = "grand"
                 
@@ -1535,6 +1540,7 @@ class Mobs:
 
                 if fautmourrir:
                     self.est_mort = True
+                
     def check_collision(self, x, y):
         #fonction regardant les collisions entre le joueur et la map
         collide = False
@@ -1590,11 +1596,14 @@ class Mobs:
             self.speedVerti = 0   
     
     def changement_forme(self):
-        # fonction permettant le changement de forme du koopa en carapace si le joueur lui saute dessus et modifie les parametres de cette entité
+        # fonction permettant le changement de forme du pooka en carapace si le joueur lui saute dessus et modifie les parametres de cette entité
         if self.est_mort:
             self.name = "carapace.png"
-            self.original = pygame.image.load(f'{jeu.world}/assets/others/{self.name}')
-            self.image = pygame.transform.scale(self.original,(self.height * self.playerSize ,self.width * self.playerSize))
+            if self.ville != 'paris':
+                self.original = pygame.image.load(f'{jeu.world}/assets/others/{self.name}').convert_alpha()
+            else:
+                self.original = pygame.image.load(f'{jeu.world}/assets/paris_others/{self.name}').convert_alpha()
+            self.image = pygame.transform.scale(self.original,(self.height * self.playerSize *2,self.width * self.playerSize))
             self.rect = self.image.get_rect()
             self.est_mort = False
             self.affaibli = True
@@ -1778,12 +1787,21 @@ class World:
         """Charge en memoire les différentes images qui seront afficher dans les niveaux"""
         c = 0
         self.screen.fill('black')
-        txt = jeu.font.render(f"{jeu.world}-{self.name}",True,(255,255,255))
+        if not 'paris' in self.name:
+            txt = jeu.font.render(f"{jeu.world}-{self.name}",True,(255,255,255))
+        else:
+            txt = jeu.font.render(f"49 Alinéa 3",True,(255,255,255))
         self.screen.blit(txt,(self.screen.get_size()[0] *0.5 - txt.get_size()[0] *0.5,self.screen.get_size()[1] *0.5 - txt.get_size()[1] *0.5))
         pygame.display.flip()
         self.othersIMG = {}
         self.winIMG = pygame.transform.scale(pygame.image.load('assets/world/others/win.png'),(self.screen.get_size()[0] * 0.5,self.screen.get_size()[1] * 0.5))
-        for img in os.listdir(f'{jeu.world}/assets/others'):
+        
+        if not 'paris' in self.name:
+            listdir = os.listdir(f'{jeu.world}/assets/others')
+        else:
+            listdir = os.listdir(f'{jeu.world}/assets/paris_others')
+        
+        for img in listdir:
             c += 1
             if 'fond' in img:
                 self.othersIMG[img] = pygame.image.load(f'{jeu.world}/assets/others/{img}').convert_alpha()
@@ -1793,10 +1811,16 @@ class World:
             if 'win' in img:
                 self.othersIMG[img] = pygame.transform.scale(pygame.image.load(f'{jeu.world}/assets/others/{img}').convert_alpha(),(self.screen.get_size()[0] * 0.5,self.screen.get_size()[1] * 0.5))
         
-        for name in os.listdir(f'{jeu.world}/assets/blocs'):
+        if not 'paris' in self.name:
+            listdir = os.listdir(f'{jeu.world}/assets/blocs')
+        else:
+            listdir = os.listdir(f'{jeu.world}/assets/paris_blocs')
+        for name in listdir:
             c += 1
-            self.imagesWorld[name] = pygame.image.load(f'{jeu.world}/assets/blocs/{name}').convert_alpha()
-        
+            if not 'paris' in self.name:
+                self.imagesWorld[name] = pygame.image.load(f'{jeu.world}/assets/blocs/{name}').convert_alpha()
+            else:
+                self.imagesWorld[name] = pygame.image.load(f'{jeu.world}/assets/paris_blocs/{name}').convert_alpha()   
         for image in self.instruDict:
             c += 1
             self.imagesWorld[self.instruDict[image][0]] = pygame.transform.scale(self.imagesWorld[self.instruDict[image][0]],(self.blockSize * float(self.instruDict[image][6]), self.blockSize * float(self.instruDict[image][7])))
@@ -1946,9 +1970,6 @@ class World:
             if not list(jeu.villesEU)[list(jeu.villesEU).index(self.name)+1] in self.sauv['N']:
                 self.sauv['N'].append(list(jeu.villesEU)[list(jeu.villesEU).index(self.name)+1])
             
-            if self.name == 'rennes' and self.sauvegarde['S'][0] == 49 and self.sauvegarde['V'][0] == 3:
-                self.sauv['N'].append('paris')
-
             self.save()
         
         if jeu.classDict['menu'].settingsDict['ShowFPS']:
@@ -1959,8 +1980,7 @@ class World:
         fonction permettant le deplacement de l'ecran sur la map selon les deplacement du joueur
         """
         for name in self.players:
-            if self.players[name].rect.x >= self.width*0.55 and self.players[name].dir == 'right':
-                self.players[name].rect.x = self.width*0.55-1000
+            if self.players[name].rect.x-self.players[name].decalage >= self.width*0.55-self.decalage:
                 self.decalage += self.players[name].speedHori
                 self.players[name].decalage = self.decalage
                 for nameMonstre in self.monstre :
@@ -1968,8 +1988,7 @@ class World:
                 for boule in self.players[name].bouleDeFeu:
                     boule.decalage = self.decalage
 
-            if self.players[name].rect.x <= self.width*0.45 and self.decalage>0 and self.players[name].dir == 'left':  
-                self.players[name].rect.x = self.width*0.55+1
+            if self.players[name].rect.x-self.players[name].decalage <= self.width*0.45-self.decalage and self.decalage>0:     
                 self.decalage += self.players[name].speedHori
                 self.players[name].decalage = self.decalage
                 for nameMonstre in self.monstre :
@@ -2287,6 +2306,7 @@ class BouleDeFeu:
         self.deplacement()
         self.draw()     
         self.tueMob()
+   
         
 jeu = Jeu()
 while True :
