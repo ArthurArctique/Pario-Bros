@@ -686,6 +686,7 @@ class Jeu:
         self.carteMonde = None
     
     def chargement(self,chemin,load = False):
+        """Charge des images dans la mémoire"""
         self.fade = 0
         c2 = 0
         if not load:
@@ -702,6 +703,7 @@ class Jeu:
             c2 += 1       
     
     def inputs(self):
+        """recupere les interactions que le joueur fait et quitte le jeu si on appuye sur la croix"""
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -716,6 +718,7 @@ class Jeu:
                     self.classDict['menu'].changeKey[0] = False
         
     def carte(self):
+        """charge et affiche la carte de sélection des niveaux"""
         try:
             if self.fade < 255:
                 self.fade += 5
@@ -824,6 +827,7 @@ class Jeu:
         self.screen.blit(stop,stopRect)
 
     def choixMonde(self):
+        """charge et affiche la carte de selection des mondes """
         if self.carteMonde == None:
             self.carteMonde = pygame.transform.scale(pygame.image.load('assets/world/others/monde.png').convert_alpha(),self.screenSize)
             self.screen.fill('lightblue')
@@ -872,6 +876,7 @@ class Jeu:
                     self.screen.blit(self.font2.render(f"Débloquez d'abord {list(self.allWorlds)[list(self.allWorlds).index(monde) -1]} ",True,(200,0,0)),(0,0))
                           
     def get_txt(self,chemin):
+        """renvoie dans une liste , le contenu d'un fichier txt"""
         file = open(f'{chemin}', 'r')
         data = file.read()
         liste = data.split("\n")
@@ -879,6 +884,7 @@ class Jeu:
         return liste
 
     def dicoInstru(self,liste):
+        """récupere les valeurs du fichier txt correspondant au différents bloc et a leur caractéristique et les stoque dans un dictionnaire"""
         dict_ = {}
         for i in liste:
             c = 0
@@ -912,6 +918,7 @@ class Jeu:
         return dict_
 
     def savoirSiFloat(self,elt) -> bool:
+        """Renvoie true si elt est est un float , False sinon"""
         try:
             float(elt)
             return True
@@ -919,6 +926,7 @@ class Jeu:
             return False
         
     def on_est_ou(self):
+        """En fonction de l'écran qui doit etre afficher , appelle les fonctions correspondantes a celui ci et afficher les fps si le joueur l'a selectionné dans les options"""
         if self.position == 'choix monde':
             self.choixMonde()
             self.cooldown += 1
@@ -930,6 +938,7 @@ class Jeu:
             self.screen.blit(jeu.font2.render(f'{int(self.clock.get_fps())} FPS',True,(0,0,0)),(0,self.screenSize[1] - self.police))
         
     def update(self):
+        """fonction qui appelle toute les fonctions nécessaire au bon fonctionnement de la classe"""
         self.on_est_ou()
         if self.classPos != '':
             self.classDict[self.classPos].update()
@@ -1130,7 +1139,7 @@ class Players:
                         if i[2][13]:
                             self.invincible = True
                             jeu.classDict['monde'].finito = True
-                        tempo = copy.deepcopy(i) #tout les jours fuck le systeme de pointage jsp quoi de python all my homis hate this shit heuresement que copy existe 
+                        tempo = copy.deepcopy(i)
                         if i[2][8] and tempo[2][9]:
                             tempo[2][9] = False
                             self.blockRECT[e][c] = tempo
@@ -1215,7 +1224,7 @@ class Players:
     
     def update(self):
         #boucle player avec les diverses fonctions pour la taille, le deplacement, les pouvoirs, ...
-        self.cooldown += 1
+        self.cooldown += 1 
         self.deplacement()
         self.animation()
         self.powerUse()
@@ -1301,6 +1310,7 @@ class Mobs:
                     self.invisible = False
            
     def animPlant(self) :
+        """en fonction de l'état de la plante (entrer ou sorti) , la déplace sur l'axe y """
         if self.phase == "entrer":
             if self.animCompteur > round(self.screen.get_size()[0]*0.042):
                 self.phase = ""
@@ -1593,6 +1603,7 @@ class Mobs:
             self.speed = round(self.screen.get_size()[0] * 0.002083) *4
     
     def update(self):
+        "fonction qui appelle toute les fonctions nécessaire au bon fonctionnement de la classe (est appeller a chaque image dans la classe world et ceux pour chaque monstre)"
         if self.est_mort :
             return self.realName
         self.eviteLeSuicide()
@@ -1764,6 +1775,7 @@ class World:
         self.quaranteNeufAlinea3 = False
 
     def chargement(self):
+        """Charge en memoire les différentes images qui seront afficher dans les niveaux"""
         c = 0
         self.screen.fill('black')
         txt = jeu.font.render(f"{jeu.world}-{self.name}",True,(255,255,255))
@@ -1799,6 +1811,8 @@ class World:
         self.players["Pario.png"] = Players(self.screen,self.blockRECT,"Pario.png",True,jeu.classDict['menu'].touchesDict,self.name)
 
     def initialiseDicoBloc(self):
+        """Crée un dictionnaire qui va stocker en clé le symbole représentant un bloc dans le fichier txt qui décrit le niveaux et qui va mettre dans une liste associé a cette clé , tout les blocs lui correspondant
+        ainsi que leur position et un rectangle"""
         self.blockRECT = {}
         for i in self.instruDict:
             self.blockRECT[i] = []
@@ -1809,6 +1823,7 @@ class World:
                     self.blockRECT[instru].append([rect,instru,self.instruDict[instru]])
 
     def mort(self):
+        """Si le joueur est mort , lui enleve une vie sur sa sauvegarde. Si le joueur n'a plus de vie , il pert la progression dans le mondes"""
         c = 0
         for i in self.players:
             if self.players[i].rect.y >= self.screen.get_size()[1] or self.players[i].est_mort:
@@ -1883,6 +1898,7 @@ class World:
                     self.stop.pop(element)
                 
     def elementIntoListe(self):
+        """Parcout la liste qui contient le fichier txt correspondant a un niveau et renvoie une liste avec le symbole du bloc ainsi que sa position """
         for ligne in range(len(self.world)):
             if self.world[ligne] != '':
                 for e in range(len(self.world[ligne])):
@@ -1895,6 +1911,7 @@ class World:
         self.screen.blit(self.othersIMG[f'fond.png'],(-self.decalage,-self.screen.get_size()[0]*0.07))
 
     def draw_on_screen(self):
+        """Affiche sur l'écran les pieces et les vies , les blocs du niveaux """              #AcontrolFpd
         
         txt = str(self.sauvegarde['S'][0])
         if len(txt) == 1:
@@ -2195,12 +2212,12 @@ class BouleDeFeu:
             self.asupprimer = True
 
 
-        if self.pos.y < self.limite-50:
-            self.speedVerti = 5
+        if self.pos.y < self.limite-round(self.screen.get_size()[0]*0.0347):
+            self.speedVerti = round(self.screen.get_size()[0]*0.0035)
 
 
         if onground and self.speedVerti > 0:
-            self.speedVerti = -5
+            self.speedVerti = - round(self.screen.get_size()[0]*0.0035)
             self.limite = self.pos.y
 
         self.move(self.speedHori, self.speedVerti)
