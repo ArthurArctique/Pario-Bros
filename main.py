@@ -1477,12 +1477,13 @@ class Mobs:
                 
                 world = jeu.classDict['monde']
                 
-                for mobs in world.monstre:
-                    if self != world.monstre[mobs]:
-                        if world.monstre[mobs].doitTuerJoueur:
-                            if pygame.Rect.colliderect(self.rect,world.monstre[mobs].rect):
-                                world.monstre[mobs].est_mort = True
-                            
+                if self.right != False or self.left != False:
+                    for mobs in world.monstre:
+                        if self != world.monstre[mobs]:
+                            if world.monstre[mobs].doitTuerJoueur:
+                                if pygame.Rect.colliderect(self.rect,world.monstre[mobs].rect):
+                                    world.monstre[mobs].est_mort = True
+                                
         else:   
             fautmourrir = True
             if pygame.Rect.colliderect(self.rect, joueur.rect) and not self.est_mort:
