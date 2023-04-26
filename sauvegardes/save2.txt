@@ -1,4 +1,4 @@
 M:['Europe']
-N:['rennes', 'londres']
-V:[4, 5, 5, 5]
-S:[85, 0]
+N:['rennes']
+V:[5, 5, 5, 5]
+S:[0, 0]
