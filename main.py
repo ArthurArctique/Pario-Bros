@@ -1430,7 +1430,6 @@ class Mobs:
                     self.left = False
                     self.right = False
                     self.est_mort = True
-                    print("ouch1")
                     joueur.speedVerti = -joueur.jumpspeed
 
 
@@ -1449,13 +1448,11 @@ class Mobs:
                     
                     if joueur.invincible:
                         self.est_mort = True
-                        print("ouch3")
         
                 elif pygame.Rect.colliderect(self.rectGauche, joueur.rect) :
                     
                     if joueur.invincible:
                         self.est_mort = True
-                        print("ouch4")
                     
                     elif not self.right and not self.left:
                         self.left = False
@@ -1467,7 +1464,6 @@ class Mobs:
                     
                     if joueur.invincible:
                         self.est_mort = True
-                        print("ouch5")
                         
                     elif not self.right and not self.left:
                         self.right = False
