@@ -1990,10 +1990,6 @@ class World:
                 for boule in self.players[name].bouleDeFeu:
                     boule.decalage = self.decalage  
 
-    def inputsMouse(self):
-        """Récupere la position de la souris a tout moment et quand le joueur clique"""
-        self.Mpos = pygame.mouse.get_pos()
-        self.mouseDown = pygame.mouse.get_pressed()
     
     def save(self):
         """Supprime une sauvegarde et crée une nouvelle sauvegarde vide""" 
@@ -2181,7 +2177,7 @@ class World:
         self.spawn_missiles()
         self.revenir_sur_ses_pas()
         self.mort()
-        self.inputsMouse()
+
         self.scrolling()
         self.drawBackGround()
         
