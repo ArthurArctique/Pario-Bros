@@ -2299,7 +2299,7 @@ class BouleDeFeu:
         return collide
     
     def draw(self):
-        #fonction qui permet l'affichage de la boule de feu
+        #fonction qui permet l'affichage de la boule de feu et prenant en compte le scrolling
         self.rect.x -= self.decalage
         self.screen.blit(self.sprite,self.rect)
 
