@@ -13,7 +13,6 @@ vec = pygame.math.Vector2
 """
 La class Menu s'occupe de tout ce qui s'affiche à l'écran avant carte animé, c'est à dire gestion des touches de la résolution etc
 """
-
 class Menu:
     def __init__(self,screen,font) -> None:
         self.settingsDict = {'Chargements' : None,'ShowFPS' : None} 
@@ -117,10 +116,10 @@ class Menu:
 
         self.chargement = False
 
-    """
-    Redimentionne les images n'appartenant pas à une vidéo
-    """
     def chargementIMG(self):
+        """
+        Redimentionne les images n'appartenant pas à une vidéo
+        """
         self.dictSize = {
             'engrenage.png' : (0.000014,2),
             'chargement.png' : (1,None),
@@ -137,10 +136,10 @@ class Menu:
                 scale = self.screenSize
             self.menuIMG[image] = pygame.transform.scale(self.menuIMGoriginal[image],scale)
 
-    """
-    Lance une page de chargements avec un indicateur de progression (barre blanche et pourcentage de l'action effectué)
-    """
     def chargementMethode(self,load = False):
+        """
+        Lance une page de chargements avec un indicateur de progression (barre blanche et pourcentage de l'action effectué)
+        """
         if not load:
             self.load = True
         self.fade = 0
@@ -190,11 +189,11 @@ class Menu:
         
         self.chargementIMG()
 
-    """
-    Méthode intermédiaire permettant au code d'être plus claire, la class possède un attribut "position" qui 
-    appele différente méthode.  
-    """
     def on_est_ou(self):
+        """
+        Méthode intermédiaire permettant au code d'être plus claire, la class possède un attribut "position" qui 
+        appele différente méthode.  
+        """
         if self.position == 'main': #Affiche la page principale (celle avec la planète qui tourne)
             self.cooldown += 1
             self.main()
@@ -214,16 +213,16 @@ class Menu:
         if self.settingsDict['ShowFPS']:
             self.screen.blit(jeu.font2.render(f'{int(jeu.clock.get_fps())} FPS',True,(255,255,255)),(0,self.screenSize[1] - jeu.police * 0.6))
 
-    """
-    Méthode principale 
-    """
     def main(self):
+        """
+        Méthode principale 
+        """
         self.x,self.y = pygame.mouse.get_pos()
 
         try:
             if self.fade < 255:
                 self.fade += 5
-            for clef in self.dictVanilla:
+            for clef in self.dictVanilla: #Si l'utilisateur à décidé d'activer les 
                 if not self.settingsDict['Chargements']:
                     if not 'Surface' in str(self.dictVanilla[clef][self.clefactuel]):
                         self.dictVanillaOriginal[clef][self.clefactuel] = pygame.image.load(f'vids_vanilla/{clef}/{self.nameDictVanilla[clef][self.clefactuel]}').convert_alpha()
@@ -258,10 +257,16 @@ class Menu:
                 self.screen.blit(self.menuIMG['logo.png'],(0,self.screenSize[1] * 0.5 - self.menuIMG['logo.png'].get_size()[1] + decalage))
                 self.screen.blit(self.menuIMG['pintendo blanc logo.png'],(self.menuIMG['pintendo blanc logo.png'].get_size()[0] * 0.22,self.screenSize[1] * 0.35 + self.menuIMG['pintendo blanc logo.png'].get_size()[1] * 0.5 + decalage))
                 self.screen.blit(surface,(0,0))
-
-            
-            sauvListe = [None] * 3
+ 
+            """
+            Affiche les 3 case de sauvegarde, si on remplace 3 par 36000 (ou plus) ça fonctionnera toujours à condition d'avoir 
+            un très grand écran pour le coup :)
+            """
+            combien = 3
+            sauvListe = [None] * combien
             for i in os.listdir('sauvegardes'):
+                if int(i[-5]) > combien:
+                    os.remove(f'sauvegardes/{i}')
                 sauvListe[int(i[-5])-1] = i
             c = 0
             for saves in sauvListe:
@@ -269,6 +274,7 @@ class Menu:
                     savesSTR = "New Save"
                 else:
                     savesSTR = saves[:-4]
+
                 save,savetxt,select = self.menuIMG['case vert.png'],jeu.font2.render(savesSTR,True,(255,255,255)),jeu.font2.render(str(self.selectSave),True,(255,255,255))
                 saveRect,saveTxtRect = save.get_rect(),savetxt.get_rect()
                 saveRect.x,saveRect.y = saveRect.width * c,self.screenSize[1] * 0.1
@@ -428,10 +434,20 @@ class Menu:
             self.screen.blit(font,(0,self.screenSize[1] * 0.75))
 
     def nouvelle_sauvegarde(self,mondes : list,niveaux : list,vies : list,score : int,pieces : int):
+        """
+        Ouvre la sauvegarde choisis ou en crée une nouvelle si le fichier n'existe pas encore (with open crée le fichier si il ne le trouve pas et que le module choisis est "write" (w))
+        """
         with open(f"sauvegardes/save{self.cSauv}.txt", "w") as save:
             save.write(f'M:{mondes}\nN:{niveaux}\nV:{vies}\nS:{[score,pieces]}')
     
     def video(self):
+        """
+        Les choix de résolution, réglages Affichage FPS et chargements sont géré ici 
+        """
+
+        """
+        boutton retour
+        """
         self.screen.fill('black')
         self.x,self.y = pygame.mouse.get_pos()
         retour = jeu.font2.render('Retour',True,(255,255,255))
@@ -447,8 +463,12 @@ class Menu:
                 else:
                     self.trouve = []
             retour = jeu.font2.render('Retour',True,(0,0,255))
-        
         self.screen.blit(retour,rrect)
+
+
+        """
+        Résolution et réglage dans la même boucle 
+        """
         resolutions = [0.5,0.75,'fullscreen']
         reglages = {'Résolution' : resolutions,'Réglages lié aux Chargements': [f'Chargements : {self.settingsDict["Chargements"]} (/!\ va entrainer un écran de chargement)',f'Affichez les FPS : {self.settingsDict["ShowFPS"]}']}
         compteur = -1
@@ -477,6 +497,10 @@ class Menu:
                 reglageRect = reglage.get_rect()
                 reglageRect.x,reglageRect.y = self.screenSize[0] * 0.5 - reglageRect.width * 0.5,self.screenSize[1]*0.1
                 compteur += 1
+
+                """
+                Partie résolution
+                """
                 if self.trouve == 'Résolution': 
                     if i != 'fullscreen':
                         text = str(get_monitors()[0].width * i)+'x' + str(get_monitors()[0].height * i)
@@ -514,7 +538,12 @@ class Menu:
                             jeu.font3 = pygame.font.SysFont('Bahnschrift', int(jeu.police*0.7))
                             jeu.font4 = pygame.font.SysFont('Bahnschrift', int(jeu.police*0.3))
                             self.chargementMethode(True)
+                       
+                        
                         elif self.trouve == "Réglages lié aux Chargements":
+                            """
+                            Sauvegarde des réglages 
+                            """
                             if 'Chargements' in i:
                                 if self.settingsDict['Chargements']:
                                     jeu.useMemory = False
@@ -529,17 +558,15 @@ class Menu:
                                     self.settingsDict["ShowFPS"] = False
                                 else:
                                     self.settingsDict["ShowFPS"] = True
-                
-                if reglageRect.left < self.x < reglageRect.right and reglageRect.top < self.y < reglageRect.bottom:
-                    reglage = jeu.font.render(self.trouve,True,(0,255,0))
-                    if pygame.mouse.get_pressed()[0]:
-                        self.trouve = []
-                        break
+
                 
                 self.screen.blit(font,fontRect)
                 self.screen.blit(reglage,reglageRect)
 
     def touches(self):
+        """
+        Réglages des touches
+        """
         self.x,self.y = pygame.mouse.get_pos()
         self.screen.fill('black')
         
@@ -610,13 +637,22 @@ class Menu:
             self.screen.blit(assignement,assignementRect)
             
     def txtTouches(self,liste):
+        """
+        remplace le fichier texte touche par un nouveau si il en existe ddéjà
+        un, c'est plus pratique que de remplacer les valeurs d'un fichier existant.
+        """
         if 'touches.txt' in os.listdir():
             os.remove('touches.txt')
+
         with open('touches.txt','w') as txt:
             for i in liste:
                 txt.write(f'{i}\n')
     
     def txtSettings(self,liste):
+        """
+        Même chose mais pour les réglages, 
+        ouverture pour l'optimisation : fusioner les deux fonctions en donnant un argument 'nom'.
+        """
         if 'settings.txt' in os.listdir():
             os.remove('settings.txt')
         with open('settings.txt','w') as txt:
@@ -625,12 +661,14 @@ class Menu:
     
     def update(self):
         self.on_est_ou()
-        pygame.display.flip()
 
+"""
+Cette class est utilisé à partir du choix du monde (Europe, Moyen-Orient etc) sur la carte
+"""
 class Jeu:
     def __init__(self) -> None:
         self.useMemory = False
-        self.FPS = 24 #de toute façon l'oeil humain ne vois pas à plus de 24 fps ;) 
+        self.FPS = 24 
         self.width , self.height = get_monitors()[0].width * 0.75,get_monitors()[0].height * 0.75
         self.screen = pygame.display.set_mode((int(self.width),int(self.height)))
         self.windowName = pygame.display.set_caption("Super Pario Bros")
@@ -642,15 +680,12 @@ class Jeu:
         self.font2  = pygame.font.SysFont('Bahnschrift', int(self.police * 0.5))
         self.font3  = pygame.font.SysFont('Bahnschrift', int(self.police * 0.7))
         self.font4 = pygame.font.SysFont('Bahnschrift', int(self.police * 0.3))
-        self.classDict = {'menu' : Menu(self.screen,self.font2),'monde' : None}
+        self.classDict = {'menu' : Menu(self.screen,self.font2),'monde' : None} #Menu = objet Menu, monde = objet world quand un niveau est choisis 
         self.clock = pygame.time.Clock()
         self.villesEU = {'rennes' : [(255,0,0)],'londres' : [(255,255,0)],'copenhague' : [(0,255,255)],'st-petersbourg' : [(255,0,255)],'athenes' : [(0,255,0)],'paris' : [(0,0,255)]}
         for ville in self.villesEU:
             self.villesEU[ville].append(f'{ville}.txt')
-            self.villesEU[ville].append(os.listdir(f'Europe/assets'))
 
-        
-        
         self.allWorlds = {'Europe' : self.villesEU,'Moyen-orient' : None,'Amérique du nord' : None,'Amérique du sud' : None}  
         
         self.noMemory = {}
@@ -684,7 +719,9 @@ class Jeu:
         self.carteMonde = None
     
     def chargement(self,chemin,load = False):
-        """Charge des images dans la mémoire"""
+        """
+        Lance un chargement pour faire patienter l'utilisateur durant le chargement des images (il y en a beaucoup)
+        """
         self.fade = 0
         c2 = 0
         if not load:
@@ -701,7 +738,9 @@ class Jeu:
             c2 += 1       
     
     def inputs(self):
-        """recupere les interactions que le joueur fait et quitte le jeu si on appuye sur la croix"""
+        """
+        Récupère tout les événements pygame, dont la fermeture de la page ou encore le code pygame des touches pressé 
+        """
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -716,7 +755,12 @@ class Jeu:
                     self.classDict['menu'].changeKey[0] = False
         
     def carte(self):
-        """charge et affiche la carte de sélection des niveaux"""
+        """
+        Méthode principale 
+
+        self.world = le monde choisis 
+        self.information = la ville 
+        """
         try:
             if self.fade < 255:
                 self.fade += 5
@@ -742,11 +786,20 @@ class Jeu:
                 surface.set_alpha(self.fade)
             
             self.screen.blit(surface,(0,0))
-            curseur_mask = pygame.mask.from_surface(pygame.Surface((10,10)))
+            curseur_mask = pygame.mask.from_surface(pygame.Surface((10,10))) #fait un mask de 10*10
             
             for villes in self.allWorlds[self.world]:
-                villeMask = pygame.mask.from_threshold(surface,self.allWorlds[self.world][villes][0],(10, 10, 10,255))
-                if villeMask.overlap(curseur_mask, (self.x ,self.y)) :
+
+                """
+                Définie dans __init__, self.allWorlds réunis tout les mondes existant en clef et leur assimile une liste de ville qui est lui 
+                même un dictionaire ou la ville est la clef et la valeur est une liste qui est un mix de 2 informations : une couleur et un nom de fichier texte 
+                """
+                villeMask = pygame.mask.from_threshold(surface,self.allWorlds[self.world][villes][0],(10, 10, 10,255)) #Cette ligne crée un masque en fonction d'une couleur sur une surface
+                """
+                Donc ici selon la ville le programme va comparer une potentielle colosion entre la surface crée plus tôt (décalé de self.x vers la droite et self.y 
+                pixels vers le bas, self.x,self.x = position du curseur)
+                """
+                if villeMask.overlap(curseur_mask, (self.x ,self.y)) : 
                     taille = round(self.screenSize[0] * 0.01)
                     pygame.draw.arc(self.screen,(255,255,255),pygame.Rect(self.x-taille,self.y-taille,taille*2,taille*2),0,180,int(taille / 3))
                     
@@ -758,9 +811,8 @@ class Jeu:
             self.screen.blit(fond,(self.screenSize[0]*0.07 ,self.screenSize[1]*0.09))
             self.screen.blit(self.font.render(self.information[:1].upper()+self.information[1:],True,(10,10,10)),(self.screenSize[0]*0.07,self.screenSize[1]*0.09))
         except:
-            pass
-
-        
+            print("L'erreur vient de vous, veuillez vérifier qu'aucune image ne soit corrompue")
+   
         if not self.stop:
             if not self.inverse:
                 self.compteurIMG += 1
@@ -794,14 +846,16 @@ class Jeu:
                 startLVL = self.font4.render(f"^^",True,(100,self.rainbow,self.rainbow))
         startLVLRect = startLVL.get_rect()
 
-        if pygame.key.get_pressed()[self.classDict["menu"].touchesDict["Saut"]] and self.cooldown > self.COOLDOWN * 2 and self.information in self.sauvegarde['N']:
+        """
+        Vérifie si la ville est débloqué et que l'utilisateur presse la touche de lancement 
+        """
+        if pygame.key.get_pressed()[self.classDict["menu"].touchesDict["Saut"]] and self.cooldown > self.COOLDOWN * 2 and self.information in self.sauvegarde['N']: 
             self.cooldown = 0
             self.classDict['monde'] = World(self.screen,f'{self.world}/{self.information}.txt',self.sauvegarde,self.information)
             self.classPos = 'monde'
             self.position = ''
             self.FPS = 60
 
-        #self.screen.blit(ombre,((0,(self.screenSize[1] - startLVLRect.height ) + 0.0025*startLVLRect.height)))
         self.screen.blit(startLVL,(0,self.screenSize[1] - startLVLRect.height))
 
         possible = ['Stop Animation','Run Animation']
@@ -825,7 +879,9 @@ class Jeu:
         self.screen.blit(stop,stopRect)
 
     def choixMonde(self):
-        """charge et affiche la carte de selection des mondes """
+        """
+        Gère le choix du monde, affiche la carte et intérprète les choix de l'utilisateur 
+        """
         if self.carteMonde == None:
             self.carteMonde = pygame.transform.scale(pygame.image.load('assets/world/others/monde.png').convert_alpha(),self.screenSize)
             self.screen.fill('lightblue')
@@ -874,7 +930,9 @@ class Jeu:
                     self.screen.blit(self.font2.render(f"Débloquez d'abord {list(self.allWorlds)[list(self.allWorlds).index(monde) -1]} ",True,(200,0,0)),(0,0))
                           
     def get_txt(self,chemin):
-        """renvoie dans une liste , le contenu d'un fichier txt"""
+        """
+        Ouvre un fichier texte et en renvois une liste
+        """
         file = open(f'{chemin}', 'r')
         data = file.read()
         liste = data.split("\n")
@@ -882,7 +940,10 @@ class Jeu:
         return liste
 
     def dicoInstru(self,liste):
-        """récupere les valeurs du fichier txt correspondant au différents bloc et a leur caractéristique et les stoque dans un dictionnaire"""
+        """
+        Récupère la liste issue du fichier texte d'avant et en forme un dictionaire,
+        pour mieux comprendez allez dans le dossier 'DOCUMENTATION' tout est expliqué 
+        """
         dict_ = {}
         for i in liste:
             c = 0
@@ -916,7 +977,9 @@ class Jeu:
         return dict_
 
     def savoirSiFloat(self,elt) -> bool:
-        """Renvoie true si elt est est un float , False sinon"""
+        """
+        Try exept pour savoir si une valeur str est aussi un float
+        """
         try:
             float(elt)
             return True
@@ -924,7 +987,9 @@ class Jeu:
             return False
         
     def on_est_ou(self):
-        """En fonction de l'écran qui doit etre afficher , appelle les fonctions correspondantes a celui ci et afficher les fps si le joueur l'a selectionné dans les options"""
+        """
+        Comme avant ceci est une méthode intermédiaire qui fonctionne exactement pareille que pour le Menu
+        """
         if self.position == 'choix monde':
             self.choixMonde()
             self.cooldown += 1
@@ -936,9 +1001,8 @@ class Jeu:
             self.screen.blit(jeu.font2.render(f'{int(self.clock.get_fps())} FPS',True,(0,0,0)),(0,self.screenSize[1] - self.police))
         
     def update(self):
-        """fonction qui appelle toute les fonctions nécessaire au bon fonctionnement de la classe"""
         self.on_est_ou()
-        if self.classPos != '':
+        if self.classPos != '': #Pour savoir si on doit alimenter la class Menu ou Jeu
             self.classDict[self.classPos].update()
         self.inputs()
         pygame.display.flip()
@@ -970,8 +1034,7 @@ class Players:
         self.rectScreen = self.screen.get_rect()
         self.timer = 0
         self.cooldown = 0
-        
-        self.COOLDOWN = round(self.screen.get_size()[0]*0.0138)
+        self.COOLDOWN = 20
         
         self.etats = {"grand":'Pario.png',"petit":"Pario.png","feu":"ParioFeu.png","etoile":"etoile.png"}
         for etat in self.etats:
@@ -1074,13 +1137,7 @@ class Players:
         
         if self.rect.colliderect(self.rectScreen):
             self.screen.blit(self.image,self.rect)
-            """
-            if self.etat != 'petit':
-                self.screen.blit(self.image,self.rect)  
-            else:
-                self.screen.blit(self.image,(self.rect.x + (self.width * self.playerSize) *0.5,(self.rect.y + self.height * self.playerSize) *1.025 ))   
-            """
-    
+  
     def animation(self):
         #permet de modifier le sens de l'image selon la direction choisi par le joueur
         if self.last_dir == "right" and self.dir == "left":
@@ -1142,7 +1199,7 @@ class Players:
                         if i[2][13]:
                             self.invincible = True
                             jeu.classDict['monde'].finito = True
-                        tempo = copy.deepcopy(i)
+                        tempo = copy.deepcopy(i) #tout les jours fuck le systeme de pointage jsp quoi de python all my homis hate this shit heuresement que copy existe 
                         if i[2][8] and tempo[2][9]:
                             tempo[2][9] = False
                             self.blockRECT[e][c] = tempo
@@ -1227,7 +1284,7 @@ class Players:
     
     def update(self):
         #boucle player avec les diverses fonctions pour la taille, le deplacement, les pouvoirs, ...
-        self.cooldown += 1 
+        self.cooldown += 1
         self.deplacement()
         self.animation()
         self.powerUse()
@@ -1438,8 +1495,8 @@ class Mobs:
                     if not joueur.invincible or (self.name == 'plant.png' and not joueur.invincible):
                         joueur.toucher()
                     else:
-                        self.est_mort = True
-            else:#condition si le monstres est un koopa sous forme de carapace
+                        self.est_mort = True                    
+            else:#condition si le monstres est un pooka sous forme de carapace
 
                 if not pygame.Rect.colliderect(self.rectGauche, joueur.rect) and not pygame.Rect.colliderect(self.rectDroit, joueur.rect) and pygame.Rect.colliderect(self.rectHaut, joueur.rect) and not self.est_mort:
                     self.left = False
@@ -1479,7 +1536,7 @@ class Mobs:
                             if world.monstre[mobs].doitTuerJoueur:
                                 if pygame.Rect.colliderect(self.rect,world.monstre[mobs].rect):
                                     world.monstre[mobs].est_mort = True
-                                
+                            
         else:   
             fautmourrir = True
             if pygame.Rect.colliderect(self.rect, joueur.rect) and not self.est_mort:
@@ -1534,7 +1591,7 @@ class Mobs:
 
                 if fautmourrir:
                     self.est_mort = True
-                
+    
     def check_collision(self, x, y):
         #fonction regardant les collisions entre le joueur et la map
         collide = False
@@ -1606,7 +1663,6 @@ class Mobs:
             self.speed = round(self.screen.get_size()[0] * 0.002083) *4
     
     def update(self):
-        "fonction qui appelle toute les fonctions nécessaire au bon fonctionnement de la classe (est appeller a chaque image dans la classe world et ceux pour chaque monstre)"
         if self.est_mort :
             return self.realName
         self.eviteLeSuicide()
@@ -1618,7 +1674,10 @@ class Mobs:
         self.apparition()
         self.animPlant()
         self.draw()
-              
+
+"""
+Cette class est un objet qui gére tout les élements du monde, à chaque fois qu'un nouveau niveau est chargé le nouvelle objet world remplace l'ancient
+"""
 class World:
     def __init__(self,screen,chemin,sauv,name) -> None:
         self.name = name
@@ -1773,7 +1832,7 @@ class World:
 
         self.acc = 0
         self.ligneVide = []
-        self.compteurNext = 0
+        self.compteurNext = 1
 
         self.quaranteNeufAlinea3 = False
 
@@ -1829,8 +1888,10 @@ class World:
         self.players["Pario.png"] = Players(self.screen,self.blockRECT,"Pario.png",True,jeu.classDict['menu'].touchesDict,self.name)
 
     def initialiseDicoBloc(self):
-        """Crée un dictionnaire qui va stocker en clé le symbole représentant un bloc dans le fichier txt qui décrit le niveaux et qui va mettre dans une liste associé a cette clé , tout les blocs lui correspondant
-        ainsi que leur position et un rectangle"""
+        """
+        Crée un dictionnaire qui va stocker en clé le symbole représentant un bloc dans le fichier txt qui décrit le niveaux et qui va mettre dans une liste associé a cette clé , tout les blocs lui correspondant
+        ainsi que leur position et un rectangle
+        """
         self.blockRECT = {}
         for i in self.instruDict:
             self.blockRECT[i] = []
@@ -1932,6 +1993,7 @@ class World:
         """Affiche sur l'écran les pieces et les vies , les blocs du niveaux , les fps , et si un niveau est terminé , débloque le prochain (Avec conditions spéciale pour un certain niveau) """
         
         txt = str(self.sauvegarde['S'][0])
+        txt = str(self.sauvegarde['S'][0])
         if len(txt) == 1:
             self.screen.blit(jeu.font2.render("Pieces : 0"+txt +f' Vie : {self.sauvegarde["V"][0]}',True,(255,255,255)),(0,0))
         else:
@@ -1961,9 +2023,24 @@ class World:
         if self.compteurEcrFin / fps >= self.TPSECRWIN:
             jeu.position = 'carte'
             jeu.classPos = ''
-            if not list(jeu.villesEU)[list(jeu.villesEU).index(self.name)+1] in self.sauv['N']:
-                self.sauv['N'].append(list(jeu.villesEU)[list(jeu.villesEU).index(self.name)+1])
+            if jeu.world == 'Europe':
+                liste_villes = list(jeu.villesEU)
+                liste_villes.remove('paris')
+            else:
+                liste_villes = list(jeu.allWorlds[jeu.world])
             
+            try:
+                suivant = liste_villes[liste_villes.index(self.name)+1]
+            except:
+                suivant = False
+            
+            if suivant:
+                if not suivant in self.sauv['N']:
+                    self.sauv['N'].append(suivant)
+            
+            if self.name == 'rennes' and self.sauvegarde['S'][0] == 49 and self.sauvegarde['V'][0] == 3 and not 'paris' in self.sauv['N']:
+                self.sauv['N'].append('paris')
+
             self.save()
         
         if jeu.classDict['menu'].settingsDict['ShowFPS']:
@@ -1974,7 +2051,7 @@ class World:
         fonction permettant le deplacement de l'ecran sur la map selon les deplacement du joueur
         """
         for name in self.players:
-            if self.players[name].rect.x-self.players[name].decalage >= self.width*0.55-self.decalage and self.players[name].dir == "right" :
+            if self.players[name].rect.x >= self.width*0.6 and self.players[name].dir == 'right':
                 self.decalage += self.players[name].speedHori
                 self.players[name].decalage = self.decalage
                 for nameMonstre in self.monstre :
@@ -1982,14 +2059,13 @@ class World:
                 for boule in self.players[name].bouleDeFeu:
                     boule.decalage = self.decalage
 
-            if self.players[name].rect.x-self.players[name].decalage <= self.width*0.45-self.decalage and self.decalage>0 and self.players[name].dir == "left":     
+            if self.players[name].rect.x <= self.width*0.4 and self.decalage>0 and self.players[name].dir == 'left':  
                 self.decalage += self.players[name].speedHori
                 self.players[name].decalage = self.decalage
                 for nameMonstre in self.monstre :
                     self.monstre[nameMonstre].decalage = self.decalage
                 for boule in self.players[name].bouleDeFeu:
                     boule.decalage = self.decalage  
-
     
     def save(self):
         """Supprime une sauvegarde et crée une nouvelle sauvegarde vide""" 
@@ -1998,7 +2074,10 @@ class World:
         jeu.classDict['menu'].nouvelle_sauvegarde(lVal[0],lVal[1],lVal[2],lVal[3][0],lVal[3][1])
 
     def special(self):
-        """Gere le niveau spécial Tetris"""
+        """
+        Gere le niveau spécial Tetris
+        """
+        
         
         surface = pygame.Surface((int(self.colonnes * self.case),int(self.case * self.lignes)))
         surface.set_alpha(200)
@@ -2106,7 +2185,6 @@ class World:
                 continue
             break
 
-
         for rect in self.allCase:
             pygame.draw.rect(self.screen,rect[1],rect[0])
         
@@ -2118,7 +2196,7 @@ class World:
 
             if len(liste) == self.colonnes:
                 if not self.finito:
-                    self.players['Pario.png'].speedHori = self.players['Pario.png'].speed * 40
+                    self.players['Pario.png'].speedHori = self.players['Pario.png'].speed * 6
                 
                 for carre in liste:
                     self.allCase.pop(copy.deepcopy(self.allCase.index(carre)))
@@ -2177,7 +2255,6 @@ class World:
         self.spawn_missiles()
         self.revenir_sur_ses_pas()
         self.mort()
-
         self.scrolling()
         self.drawBackGround()
         
@@ -2296,8 +2373,7 @@ class BouleDeFeu:
         self.deplacement()
         self.draw()     
         self.tueMob()
-   
-        
+
 jeu = Jeu()
 while True :
     jeu.update()
