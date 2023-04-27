@@ -968,11 +968,17 @@ class Jeu:
         if not self.persoOupas:
             self.screen.blit(self.classDict['menu'].menuIMG['logo.png'],(self.screenSize[0] *0.3,0))
             text = [self.font2.render('Rendez-vous dans le dossier "DOCUMENTATION/README-Editeur"',True,(255,255,255)),jeu.font2.render("Pour comprendre comment utiliser l'éditeur",True,(255,255,255))]
+            file = open(f'DOCUMENTATION/README - Editeur.txt', 'r',-1,'UTF-8')
+            data = file.read()
+            liste = data.split("\n")
+            file.close()
+            text = liste
             c = -1
             for texte in text:
                 c += 1
+                texte = self.font2.render(texte,True,(255,255,255))
                 rect = texte.get_rect()
-                self.screen.blit(texte,(self.screenSize[0] *0.5 - rect.width *0.5,self.screenSize[1] *0.5 + c * self.police - self.police))
+                self.screen.blit(texte,(self.screenSize[0] *0.5 - rect.width *0.5,self.screenSize[1] *0.5 + c * self.police*0.5 - self.police *2))
             
             posibilite = 'Fichiers locaux ','Editeur'
 
@@ -2150,9 +2156,9 @@ class World:
         txt = str(self.sauvegarde['S'][0])
         txt = str(self.sauvegarde['S'][0])
         if len(txt) == 1:
-            self.screen.blit(jeu.font2.render("Pieces : 0"+txt +f' Vie : {self.sauvegarde["V"][0]}',True,(255,255,255)),(0,0))
+            self.screen.blit(jeu.font2.render("Pieces : 0"+txt +f' Vie : {self.sauvegarde["V"][0]}',True,(0,0,0)),(0,0))
         else:
-            self.screen.blit(jeu.font2.render("Pieces : "+txt+f' Vie : {self.sauvegarde["V"][0]}',True,(255,255,255)),(0,0))
+            self.screen.blit(jeu.font2.render("Pieces : "+txt+f' Vie : {self.sauvegarde["V"][0]}',True,(0,0,0)),(0,0))
             
         for keys in self.blockRECT :
             for i in self.blockRECT[keys]:
