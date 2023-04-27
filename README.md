@@ -69,11 +69,11 @@ A vous de vaincre nos 5 niveaux, avec un dernier niveau un peu spécial pour fin
 ## Vos propres niveaux ??
 
 Ecrire chaque bloc symboles par symboles dans un fichier texte ça allait au début, mais on a vite compris qu'on pourrait produire et tester les niveaux bien plus vite si on créait un programme rien que pour ça. On a alors créé notre propre éditeur de niveaux. Vous êtes inspiré ? Envie de vous venger après avoir terminé notre jeu ?
-On met à disposition l'éditeur qu'on a utilisé durant le développement de notre projet pour que vous puissiez créer vos propres niveaux pour faire vivre encore plus d'aventures a votre baguette favorite.
+On met à disposition l'éditeur qu'on a utilisé durant le développement de notre projet pour que vous puissiez créer vos propres niveaux pour faire vivre encore plus d'aventures a votre baguette favorite. Allez sur la carte de selection des niveaux et un bouton nivaux locaux apparaîtra , cliquez dessus pour lancer l'éditeur !
 
 <p float="left">
-<img src="https://github.com/ArthurArctique/Pario-Bros/blob/main/Pour%20le%20readme/editeur1.png" width="500">
-<img src="https://github.com/ArthurArctique/Pario-Bros/blob/main/Pour%20le%20readme/editeur2.png" width="500">
+<img src="https://github.com/ArthurArctique/Pario-Bros/blob/main/Pour%20le%20readme/editeur1.png" width="400">
+<img src="https://github.com/ArthurArctique/Pario-Bros/blob/main/Pour%20le%20readme/editeur2.png" width="400">
 </p>
 ## License Mario Bros
 
