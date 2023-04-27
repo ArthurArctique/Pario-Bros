@@ -6,7 +6,7 @@ Nous avons créé un clone du célèbre jeu Mario en utilisant le langage de pro
 
 
 
-![Screenshot](https://github.com/ArthurArctique/Pario-Bros/blob/547df32811bdfa57065bec6eb9eaa222520ec985/Pour%20le%20readme/ecranJeu.png)
+![Screenshot](https://github.com/ArthurArctique/Pario-Bros/blob/main/Pour%20le%20readme/ecranJeu.png)
 
 
 
