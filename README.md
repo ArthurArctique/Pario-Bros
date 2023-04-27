@@ -34,7 +34,7 @@ Nous avons également inclus un écran d'accueil par naviguer de niveaux en nive
 A partir de ce menu , on peut accéder aux options grâce à l'engrenage en haut à gauche. Comme le menu pour changer ses touches ou la résolution du jeu 
 
 <p float="left">
-  <img src="https://github.com/ArthurArctique/Pario-Bros/blob/202646996cfc267556427777a08f81b4e34b0a61/Pour%20le%20readme/touche.png" width="400" />
+  <img src="https://github.com/ArthurArctique/Pario-Bros/blob/main/Pour%20le%20readme/touche.png" width="400" />
   <img src="https://github.com/ArthurArctique/Pario-Bros/blob/202646996cfc267556427777a08f81b4e34b0a61/Pour%20le%20readme/resolu.png" width="400" />
 </p>
 
