@@ -967,7 +967,6 @@ class Jeu:
 
         if not self.persoOupas:
             self.screen.blit(self.classDict['menu'].menuIMG['logo.png'],(self.screenSize[0] *0.3,0))
-            text = [self.font2.render('Rendez-vous dans le dossier "DOCUMENTATION/README-Editeur"',True,(255,255,255)),jeu.font2.render("Pour comprendre comment utiliser l'éditeur",True,(255,255,255))]
             file = open(f'DOCUMENTATION/README - Editeur.txt', 'r',-1,'UTF-8')
             data = file.read()
             liste = data.split("\n")
