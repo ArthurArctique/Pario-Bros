@@ -71,7 +71,7 @@ class Menu:
         
         self.menuIMGoriginal = {name : pygame.image.load(f'assets/menu/{name}').convert_alpha() for name in os.listdir('assets/menu')} #Les quelques images autre que les images vidéos sont chargé ici
         self.menuIMG = {}
-        self.chargementIMG() #et son redimentionné ici (ligne 117)
+        self.chargementIMG() #et son redimentionné ici 
 
         self.load = False
         if self.settingsDict['Chargements']: #Information récupérée ligne 35, correspond à si l'utilisateur veut avoir des chargements pour avoir une meilleure expérience visuelle ou non
@@ -127,6 +127,7 @@ class Menu:
             'logo.png' : (0.00022,1),
             'pintendo blanc logo.png' : (0.000105,2),
             'pintendo logo.png' : (0.000105,2),
+            'fond.png' : (1,None),
         }
 
         for image in self.menuIMGoriginal:
@@ -135,6 +136,10 @@ class Menu:
             else:
                 scale = self.screenSize
             self.menuIMG[image] = pygame.transform.scale(self.menuIMGoriginal[image],scale)
+        
+        self.fondRect = [self.menuIMG['fond.png'].get_rect()]
+        self.fondRect.append(copy.deepcopy(self.fondRect[0]))
+        self.fondRect[1].x = -self.screenSize[0]
 
     def chargementMethode(self,load = False):
         """
@@ -195,6 +200,7 @@ class Menu:
         appele différente méthode.  
         """
         if self.position == 'main': #Affiche la page principale (celle avec la planète qui tourne)
+            jeu.FPS = 24
             self.cooldown += 1
             self.main()
         elif self.position == 'Réglages Vidéos': 
@@ -209,7 +215,8 @@ class Menu:
         elif self.position == 'Touches':
             self.cooldown += 1
             self.touches()
-        
+    
+
         if self.settingsDict['ShowFPS']:
             self.screen.blit(jeu.font2.render(f'{int(jeu.clock.get_fps())} FPS',True,(255,255,255)),(0,self.screenSize[1] - jeu.police * 0.6))
 
@@ -222,9 +229,9 @@ class Menu:
         try:
             if self.fade < 255:
                 self.fade += 5
-            for clef in self.dictVanilla: #Si l'utilisateur à décidé d'activer les 
-                if not self.settingsDict['Chargements']:
-                    if not 'Surface' in str(self.dictVanilla[clef][self.clefactuel]):
+            for clef in self.dictVanilla: 
+                if not self.settingsDict['Chargements']:#Si l'utilisateur à décidé d'activer les chargements
+                    if not 'Surface' in str(self.dictVanilla[clef][self.clefactuel]): #vérifie si l'image actuel n'est pas déjà chargé (si c'est une surface cela veut dire que c'est le cas)
                         self.dictVanillaOriginal[clef][self.clefactuel] = pygame.image.load(f'vids_vanilla/{clef}/{self.nameDictVanilla[clef][self.clefactuel]}').convert_alpha()
                         surface = pygame.transform.scale(self.dictVanillaOriginal[clef][self.clefactuel],self.screenSize)
                         self.dictVanilla[clef][self.clefactuel] = surface
@@ -233,12 +240,20 @@ class Menu:
                             self.dictSpeOriginal[clef][self.clefactuel] = pygame.image.load(f'vids_special/{clef}/{self.nameDictSpe[clef][self.clefactuel]}').convert_alpha()
                             self.dictSpe[clef][self.clefactuel] = pygame.transform.scale(self.dictSpeOriginal[clef][self.clefactuel],self.screenSize)
                     else:
-                        surface = self.dictVanilla[clef][self.clefactuel]
-                else:
+                        surface = self.dictVanilla[clef][self.clefactuel] #Si l'image a déjà été chargée on se contente de la récupérer
+                
+                else: #Si les chargements ont été activé cela veut dire que dans tout les cas l'image est chargé donc pas la peine de faire la vérification précédente
                     surface = self.dictVanilla[clef][self.clefactuel]
                     surface.set_alpha(self.fade)
-                curseur_mask = pygame.mask.from_surface(pygame.Surface((self.screenSize[0],1)))
+                
+                """
+                Le texte est une vidéo animée qui est de la taille de l'écran (on ne l'a pas redimensionné pour éviter les problèmes potentiels, en 
+                réalité on aurait pu la redimensionner, replacé au bon endroit et simplement prendre son rect mais au final ça ne change pas grand-chose).
+                Donc on est contraint d'utiliser un mask
+                """
+                curseur_mask = pygame.mask.from_surface(pygame.Surface((self.screenSize[0],1))) #le mask par une surface ne prend pas en compte les pixels vides, ce qui nous arrange
                 surface_mask = pygame.mask.from_surface(surface)
+                
                 if surface_mask.overlap(curseur_mask, (self.x -self.screenSize[0]/2,self.y )) and 'clic' in clef and not self.chargement:
                     if pygame.mouse.get_pressed()[0] and self.cooldown > self.COOLDOWN and self.cSauv != 0:
                         self.cooldown = 0
@@ -279,6 +294,8 @@ class Menu:
                 saveRect,saveTxtRect = save.get_rect(),savetxt.get_rect()
                 saveRect.x,saveRect.y = saveRect.width * c,self.screenSize[1] * 0.1
                 saveTxtRect.x,saveTxtRect.y = saveRect.center[0] - saveTxtRect.width*0.5,saveRect.center[1] - saveTxtRect.height *0.5
+                self.screen.blit(save,saveRect)
+
 
                 if self.chargement != 1 and saveRect.left < pygame.mouse.get_pos()[0] < saveRect.right and saveRect.top < pygame.mouse.get_pos()[1] < saveRect.bottom and self.stop1ou2 != 2 or (self.stop1ou2 == 2 and c == self.cSauv -1): 
                     if pygame.mouse.get_pressed()[0] and self.cooldown > self.COOLDOWN and not self.chargement:
@@ -297,29 +314,28 @@ class Menu:
                         
 
                     savetxt = jeu.font2.render(savesSTR,True,(200,0,0))
-                    saveRect.y += saveRect.height * 0.1
-                    saveTxtRect.y += saveRect.height * 0.1
+                    pygame.draw.rect(self.screen,(255,255,255),saveRect,3,jeu.police)
                 
-                self.screen.blit(save,saveRect)
+                
                 self.screen.blit(savetxt,saveTxtRect)
-                self.screen.blit(select,(self.screenSize[0] - select.get_rect().width,0))
                 c += 1
+            self.screen.blit(select,(self.screenSize[0] - select.get_rect().width,0))
         except:
             text = "Erreur d'affichage"
             self.screen.blit(jeu.font2.render(text,True,(255,255,255)),(0,0))
             
         if not self.stop:
-            
-            anim = jeu.font.render('Stop animation',True,(255,255,255))
+            anim = jeu.font2.render('Stop animation',True,(255,255,255))
             animRect = anim.get_rect()
             animRect.x = self.screenSize[0] - animRect.width - jeu.police * 1.5
 
             if animRect.left < self.x < animRect.right and animRect.top < self.y < animRect.bottom :
-                anim = jeu.font.render('Stop animation',True,(255,0,0))
+                anim = jeu.font2.render('Stop animation',True,(255,0,0))
                 if pygame.mouse.get_pressed()[0] and self.cooldown > self.COOLDOWN:
                     self.cooldown = 0
                     self.stop = True
             
+            pygame.draw.rect(self.screen,(255,255,255),animRect,1)
             self.screen.blit(anim,animRect)
 
             if not self.inverse:
@@ -331,12 +347,14 @@ class Menu:
                 if self.clefactuel == 0:
                     self.inverse = False
         else:
-            anim = jeu.font.render('Run animation',True,(255,255,255))
+            anim = jeu.font2.render('Run animation',True,(255,255,255))
             animRect = anim.get_rect()
             animRect.x = self.screenSize[0] - animRect.width - jeu.police * 1.5
+            pygame.draw.rect(self.screen,(255,255,255),animRect,1)
 
             if animRect.left < self.x < animRect.right and animRect.top < self.y < animRect.bottom :
-                anim = jeu.font.render('Run animation',True,(255,0,0))
+                anim = jeu.font2.render('Run animation',True,(255,0,0))
+                pygame.draw.rect(self.screen,(255,0,0),animRect,1)
                 if pygame.mouse.get_pressed()[0] and self.cooldown > self.COOLDOWN:
                     self.cooldown = 0
                     self.stop = False
@@ -445,13 +463,27 @@ class Menu:
         Les choix de résolution, réglages Affichage FPS et chargements sont géré ici 
         """
 
+        
         """
         boutton retour
         """
+        jeu.FPS = 60
+        surface = self.menuIMG['fond.png']
         self.screen.fill('black')
+        c = -1
+        for fond in self.fondRect:
+            c+=1
+            surface.set_alpha(200)
+            self.fondRect[c].x += 1
+            if self.fondRect[c].x >= self.screenSize[0]:
+                self.fondRect[c].x = -self.screenSize[0]
+            self.screen.blit(surface,fond)
+
         self.x,self.y = pygame.mouse.get_pos()
         retour = jeu.font2.render('Retour',True,(255,255,255))
         rrect = retour.get_rect()
+        pygame.draw.rect(self.screen,(0,0,0),rrect)
+        pygame.draw.rect(self.screen,(255,255,255),rrect,1)
         if rrect.left < self.x < rrect.right and rrect.top < self.y < rrect.bottom or pygame.key.get_pressed()[pygame.K_ESCAPE]:
             if (pygame.mouse.get_pressed()[0] or pygame.key.get_pressed()[pygame.K_ESCAPE]) and self.cooldown > self.COOLDOWN:
                 self.cooldown = 0
@@ -487,7 +519,8 @@ class Menu:
                         reg = jeu.font.render(reglage,True,(255,255,255))
                         self.trouve = reglage
                         break
-
+                pygame.draw.rect(self.screen,(0,0,0),regRect)
+                pygame.draw.rect(self.screen,(255,255,255),regRect,1)
                 self.screen.blit(reg,regRect)
         
         compteur = -1
@@ -559,16 +592,27 @@ class Menu:
                                 else:
                                     self.settingsDict["ShowFPS"] = True
 
-                
+                pygame.draw.rect(self.screen,(0,0,0),fontRect)
+                pygame.draw.rect(self.screen,(255,255,255),fontRect,1)
                 self.screen.blit(font,fontRect)
                 self.screen.blit(reglage,reglageRect)
 
     def touches(self):
+        jeu.FPS = 60
         """
         Réglages des touches
         """
         self.x,self.y = pygame.mouse.get_pos()
+        surface = self.menuIMG['fond.png']
         self.screen.fill('black')
+        c = -1
+        for fond in self.fondRect:
+            c+=1
+            surface.set_alpha(200)
+            self.fondRect[c].x += 1
+            if self.fondRect[c].x >= self.screenSize[0]:
+                self.fondRect[c].x = -self.screenSize[0]
+            self.screen.blit(surface,fond)
         
         retour = jeu.font2.render('Retour',True,(255,255,255))
         rrect = retour.get_rect()
@@ -576,6 +620,7 @@ class Menu:
             if pygame.mouse.get_pressed()[0] or pygame.key.get_pressed()[pygame.K_ESCAPE] and self.cooldown > self.COOLDOWN:
                 self.cooldown = 0
                 self.position = 'main'
+                jeu.FPS = 24
                 self.txtTouches(self.touchesDict.values())
             retour = jeu.font2.render('Retour',True,(0,0,255))
         self.screen.blit(retour,rrect)
@@ -631,7 +676,8 @@ class Menu:
             if toucheFR.x < self.plusagauche:
                 self.plusagauche = toucheFR.x
             border = pygame.Rect(self.plusagauche,toucheFR.y,self.screenSize[0] - self.plusagauche - (self.screenSize[0] - assignementRect.right) , toucheFR.height)
-            pygame.draw.rect(self.screen,"gray",border,2)
+            pygame.draw.rect(self.screen,"black",border)
+            pygame.draw.rect(self.screen,"white",border,2)
             
             self.screen.blit(toucheF,toucheFR)
             self.screen.blit(assignement,assignementRect)
@@ -680,7 +726,7 @@ class Jeu:
         self.font2  = pygame.font.SysFont('Bahnschrift', int(self.police * 0.5))
         self.font3  = pygame.font.SysFont('Bahnschrift', int(self.police * 0.7))
         self.font4 = pygame.font.SysFont('Bahnschrift', int(self.police * 0.3))
-        self.classDict = {'menu' : Menu(self.screen,self.font2),'monde' : None} #Menu = objet Menu, monde = objet world quand un niveau est choisis 
+        self.classDict = {'menu' : Menu(self.screen,self.font2),'monde' : None,'edit' : None} #Menu = objet Menu, monde = objet world quand un niveau est choisis 
         self.clock = pygame.time.Clock()
         self.villesEU = {'rennes' : [(255,0,0)],'londres' : [(255,255,0)],'copenhague' : [(0,255,255)],'st-petersbourg' : [(255,0,255)],'athenes' : [(0,255,0)],'paris' : [(0,0,255)]}
         for ville in self.villesEU:
@@ -717,6 +763,8 @@ class Jeu:
         self.scrollActivate = False
         self.imagesMondes = {}
         self.carteMonde = None
+
+        self.persoOupas = False
     
     def chargement(self,chemin,load = False):
         """
@@ -761,6 +809,7 @@ class Jeu:
         self.world = le monde choisis 
         self.information = la ville 
         """
+        self.persoOupas = False
         try:
             if self.fade < 255:
                 self.fade += 5
@@ -811,7 +860,7 @@ class Jeu:
             self.screen.blit(fond,(self.screenSize[0]*0.07 ,self.screenSize[1]*0.09))
             self.screen.blit(self.font.render(self.information[:1].upper()+self.information[1:],True,(10,10,10)),(self.screenSize[0]*0.07,self.screenSize[1]*0.09))
         except:
-            print("L'erreur vient de vous, veuillez vérifier qu'aucune image ne soit corrompue")
+            pass
    
         if not self.stop:
             if not self.inverse:
@@ -877,7 +926,105 @@ class Jeu:
                     self.stopClicable = True
                     self.stop = False
         self.screen.blit(stop,stopRect)
+    
+        lvlPerso = self.font2.render('Niveaux locaux',True,(self.rainbow,self.inverseRainbow,255))
+        lvlRect = lvlPerso.get_rect()
 
+        lvlRect.y = self.screenSize[1] - lvlRect.height *3
+        
+        if lvlRect.left < self.x < lvlRect.right and lvlRect.top < self.y < lvlRect.bottom:
+            lvlPerso = self.font2.render('Niveaux locaux',True,(255,0,0))
+            if pygame.mouse.get_pressed()[0] and self.cooldown > self.COOLDOWN:
+                self.cooldown = 0
+                self.position = 'perso'
+        
+        self.screen.blit(lvlPerso,lvlRect)
+
+    def perso(self):
+        self.x,self.y = pygame.mouse.get_pos()
+        """
+        Fenêtre pour les niveaux personalisés
+        """
+        self.screen.fill((50,50,50))
+
+        """
+        Boutton retour
+        """
+        retour = self.font2.render('retour',True,(255,255,255))
+        retourrect = retour.get_rect()
+        if 0 < self.x < retourrect.right and 0 < self.y < retourrect.bottom or pygame.key.get_pressed()[K_ESCAPE]:
+            retour = self.font2.render('retour',True,(255,0,0))
+            if (pygame.mouse.get_pressed()[0] or pygame.key.get_pressed()[K_ESCAPE]) and self.cooldown > self.COOLDOWN:
+                self.cooldown = 0
+                if not self.persoOupas:
+                    self.position = 'carte'
+                    self.information = 'rennes'
+                self.persoOupas = False
+
+            
+        
+        self.screen.blit(retour,retourrect)
+
+        if not self.persoOupas:
+            self.screen.blit(self.classDict['menu'].menuIMG['logo.png'],(self.screenSize[0] *0.3,0))
+            text = [self.font2.render('Rendez-vous dans le dossier "DOCUMENTATION/README-Editeur"',True,(255,255,255)),jeu.font2.render("Pour comprendre comment utiliser l'éditeur",True,(255,255,255))]
+            c = -1
+            for texte in text:
+                c += 1
+                rect = texte.get_rect()
+                self.screen.blit(texte,(self.screenSize[0] *0.5 - rect.width *0.5,self.screenSize[1] *0.5 + c * self.police - self.police))
+            
+            posibilite = 'Fichiers locaux ','Editeur'
+
+            c = -1
+            for posi in posibilite:
+                c += 1
+                ok = self.font3.render(posi,True,(200,200,200))
+                okrect = ok.get_rect()
+                okrect.x,okrect.y = self.screenSize[0] *0.5 - okrect.width + okrect.width *c + self.police,self.screenSize[1] *0.5 + self.police *1.25
+
+                self.screen.blit(ok,okrect)
+                pygame.draw.rect(self.screen,(200,200,200),okrect,1)
+
+                if okrect.left < self.x < okrect.right and okrect.top < self.y < okrect.bottom:
+                    pygame.draw.rect(self.screen,(255,0,0),okrect,1)
+                    if pygame.mouse.get_pressed()[0]:
+                        if posi == 'Editeur':
+                            self.classPos = 'edit'
+                            self.position = ''
+                            self.classDict['edit'] = Editeur(self.screen)
+                            self.FPS = 60
+                        else:
+                            self.cooldown = 0
+                            self.persoOupas = True
+        else:
+            c = -1
+            for niveau in os.listdir('Niveaux Personnalisés'):
+                c+= 1
+                niv = str(niveau) + ' ' *2
+                lvl = self.font2.render(niv,True,(255,255,255))
+                rect = lvl.get_rect()
+                rect.x,rect.y = self.screenSize[0] *0.5 - rect.width *0.5, rect.height * c
+
+
+                if rect.left < self.x < rect.right and rect.top < self.y < rect.bottom:
+                    lvl = self.font2.render(str(niveau),True,(255,0,0))
+                    if pygame.mouse.get_pressed()[0] and self.cooldown > self.COOLDOWN:
+                        self.information = niveau[:-4]
+                        self.cooldown = 0
+                        self.classDict['monde'] = World(self.screen,f'Niveaux Personnalisés/{self.information}.txt',self.sauvegarde,self.information)
+                        self.classPos = 'monde'
+                        self.position = ''
+                        self.FPS = 60
+                    
+                    elif pygame.mouse.get_pressed()[2] and self.cooldown > self.COOLDOWN:
+                        self.cooldown = 0
+                        os.remove(f'Niveaux Personnalisés/{niveau}')
+                
+
+                self.screen.blit(lvl,rect)
+                self.screen.blit(self.font2.render('Clique souris droit pour supprimer un niveau',True,(0,255,0)),(0,self.screenSize[1] - self.police * 1.5))
+    
     def choixMonde(self):
         """
         Gère le choix du monde, affiche la carte et intérprète les choix de l'utilisateur 
@@ -996,13 +1143,16 @@ class Jeu:
         if self.position == 'carte':
             self.cooldown += 1
             self.carte()
+        elif self.position == 'perso':
+            self.cooldown += 1
+            self.perso()
         
         if self.classDict['menu'].settingsDict['ShowFPS']:
             self.screen.blit(jeu.font2.render(f'{int(self.clock.get_fps())} FPS',True,(0,0,0)),(0,self.screenSize[1] - self.police))
         
     def update(self):
         self.on_est_ou()
-        if self.classPos != '': #Pour savoir si on doit alimenter la class Menu ou Jeu
+        if self.classPos != '': #Quand classPos est = '' c'est qu'on est ni à l'écran principal ni en jeu
             self.classDict[self.classPos].update()
         self.inputs()
         pygame.display.flip()
@@ -1906,17 +2056,22 @@ class World:
         c = 0
         for i in self.players:
             if self.players[i].rect.y >= self.screen.get_size()[1] or self.players[i].est_mort:
-                self.sauvegarde['V'][c] -= 1
-                if self.sauvegarde['V'][c] <= 0 :
-                    for ville in jeu.allWorlds[self.sauvegarde['M'][-1]]:
-                        if ville in self.sauvegarde['N']:
-                            self.sauvegarde['N'].remove(ville)
-                    self.sauvegarde['N'].append(list(jeu.allWorlds[self.sauvegarde['M'][-1]])[0])
-                    self.sauvegarde['V'][c] = 5
-                    self.sauvegarde['S'] = [0,0]
                 
-                self.save()
-                jeu.position = 'carte'
+                if not jeu.persoOupas:
+                    self.sauvegarde['V'][c] -= 1
+                    if self.sauvegarde['V'][c] <= 0 :
+                        for ville in jeu.allWorlds[self.sauvegarde['M'][-1]]:
+                            if ville in self.sauvegarde['N']:
+                                self.sauvegarde['N'].remove(ville)
+                        self.sauvegarde['N'].append(list(jeu.allWorlds[self.sauvegarde['M'][-1]])[0])
+                        self.sauvegarde['V'][c] = 5
+                        self.sauvegarde['S'] = [0,0]
+                    
+                    self.save()
+                    jeu.position = 'carte'
+                else:
+                    jeu.position = 'perso'
+                
                 jeu.classPos = ''
             c+=1
 
@@ -2374,6 +2529,321 @@ class BouleDeFeu:
         self.draw()     
         self.tueMob()
 
+"""
+Nous avons décider de rendre accésible l'éditeur fait par nos soins qui a servis à créer facilement nos niveaux de façon à 
+laisser la posibilité à l'utilisateur de pouvoir faire ses propres niveaux et y jouer.
+"""
+class Editeur:
+    def __init__(self,screen) -> None:
+        self.screen = screen
+        self.ligne = {self.ligne:[' ' for i in range(206)] for self.ligne in range(15)}
+        self.ctrlZ = []
+        info = self.dicoInstru('block.txt')
+        self.scale = 0.75
+        self.choixNiv = False
+        self.save = ''
+
+        """
+        Chargement des self.images
+        """
+        self.image = {}
+        first = True
+        for i in info:
+            if info[i][0] == 'vide.png':
+                self.image[i] = [pygame.transform.scale(pygame.image.load(f'assets/monstres/{info[i][4]}').convert_alpha(),(int(self.screen.get_size()[1]/15) * self.scale * info[i][6],int(self.screen.get_size()[1]/15) * self.scale * info[i][7] )),i]
+            elif info[i][0] == 'surprise.png':
+                if not first:
+                    self.image[i] = [pygame.transform.scale(pygame.image.load(f'assets/monstres/{info[i][11]}.png').convert_alpha(),(int(self.screen.get_size()[1]/15) * self.scale * info[i][6],int(self.screen.get_size()[1]/15) * self.scale * info[i][7] )),i]
+                else:
+                    first = False
+                    self.image[i] = [pygame.transform.scale(pygame.image.load(f'Europe/assets/blocs/{info[i][0]}').convert_alpha(),(int(self.screen.get_size()[1]/15) * self.scale * info[i][6],int(self.screen.get_size()[1]/15) * self.scale * info[i][7] )),i]
+            else:
+                self.image[i] = [pygame.transform.scale(pygame.image.load(f'Europe/assets/blocs/{info[i][0]}').convert_alpha(),(int(self.screen.get_size()[1]/15) * self.scale * info[i][6],int(self.screen.get_size()[1]/15) * self.scale * info[i][7] )),i]
+
+        self.case = {}
+
+        #crée des self.cases vide
+        for x in range(206):
+            for y in range(15):
+                self.case[(x,y)] = None
+
+        self.select = ''
+        self.decalage = 0
+        self.cooldown = 5
+        self.COOLDOWN = 5
+        self.groscooldown = 500
+        self.GROSCOOLDOWN = 500
+
+    def dicoInstru(self,chemin):
+            file = open(chemin, 'r')
+            data = file.read()
+            liste = data.split("\n")
+            file.close()
+            dict_ = {}
+            for i in liste:
+                c = 0
+                chaineCAr = ""
+                for lettre in i:
+                    if c == 0:
+                        dict_[i[0]] = []
+                        c = 1
+                        continue
+                    else:
+                        if lettre == '[':
+                            continue
+                        elif lettre != ',' and lettre != ']' and lettre != ':' and lettre != '' and lettre != '"' and lettre != "'":
+                            chaineCAr = chaineCAr + lettre
+                        if lettre == ']' or lettre == ',':
+                            
+                            if chaineCAr == 'True':
+                                chaineCAr = True
+                            elif chaineCAr == 'False':
+                                chaineCAr = False
+                            elif chaineCAr == 'None' or chaineCAr == ' None':
+                                chaineCAr = None
+                            elif chaineCAr.isdigit() or chaineCAr[1:].isdigit():
+                                chaineCAr = int(chaineCAr)
+                            elif self.savoirSiFloat(chaineCAr) or self.savoirSiFloat(chaineCAr[1:]):
+                                chaineCAr = float(chaineCAr)
+                            dict_[i[0]].append(chaineCAr)
+                            chaineCAr = ''
+                            if lettre == ']':
+                                break
+            return dict_
+
+    def savoirSiFloat(self,elt):
+        try:
+            float(elt)
+            return True
+        except ValueError:
+            return False
+
+    def txt(self):
+        """
+        Vérifie si le fichier existe déjà ou pas, si ce n'est pas le cas :
+        il prend le chiffre à la fin du dernier nom existant, vu que les fichier 
+        sont généré de façon logique le programme fait simplement +1 et génére donc
+        un nouveau nom
+        """
+        if not self.save:
+            str_ = ''
+            for i in os.listdir('Niveaux Personnalisés'):
+                str_ = str_ + i
+            if not 'nivED' in str_:
+                self.writeTXT('Niveaux Personnalisés/nivED0.txt')
+            else:
+                tempo = os.listdir('Niveaux Personnalisés')
+                tempo.sort()
+                a = []
+                for i in tempo:
+                    if 'nivED' in i:
+                        a.append(i)
+                tempo = int(a[-1][a[-1].index('.')-1])
+                self.writeTXT(f'Niveaux Personnalisés/nivED{tempo+1}.txt')
+        else:
+            os.remove(f'Niveaux Personnalisés/{self.save}')
+            self.writeTXT(f'Niveaux Personnalisés/{self.save}')
+
+    def writeTXT(self,nom):
+        """
+        Crée un fichier texte qui est remplis par les bloc 
+        placé comme affiché dans l'éditeur 
+        """
+        chaineCar = ''
+        first = True
+        for l in self.ligne:
+            if first:
+                first = False
+            else:
+                chaineCar = chaineCar + '\n'
+            
+            for car in self.ligne[l]:
+                chaineCar = chaineCar + car
+
+        with open(nom,'w') as txt:
+            txt.write(chaineCar)
+
+    def main(self):
+
+        self.groscooldown += 1
+        self.screen.fill('lightblue')
+
+        curseur = pygame.Surface((1,1)).get_rect()
+        
+        curseur.x,curseur.y = pygame.mouse.get_pos()
+
+        """
+        gère le ctrl+z, soit le retour en arrière d'une action, ou plutôt ici la supression d'un bloc récent 
+        """
+
+        if pygame.key.get_pressed()[K_LCTRL] and pygame.key.get_pressed()[K_z] and self.cooldown > self.COOLDOWN * 2:
+            self.cooldown = 0
+            if self.ctrlZ:
+                value = self.ctrlZ.pop(-1)
+                self.case[value] = None
+                self.ligne[value[1]][value[0]] = ' '
+
+        """
+        sauvegarde le fichier 
+        """
+
+        if pygame.key.get_pressed()[K_SPACE] and self.groscooldown > self.GROSCOOLDOWN:
+            self.groscooldown = 0
+            self.txt()
+
+        if pygame.mouse.get_pressed()[1]:
+            if curseur.x > jeu.screenSize[0] *0.5 and self.decalage < jeu.screenSize[0] *5:
+                self.decalage += jeu.screenSize[0] *0.03
+            elif curseur.x < jeu.screenSize[0] *0.5 and self.decalage > -jeu.screenSize[0] * 0.06:
+                self.decalage -= jeu.screenSize[0] *0.03
+        
+        """
+        Parcours les self.cases et vérifie si le curseur est en contact avec l'une d'entre-elle
+        """
+        for j in range(206):
+            for i in range(15):
+                
+                if not self.case[(j,i)]:
+                    surface = pygame.Surface((int(self.screen.get_size()[1]/15) * self.scale,int(self.screen.get_size()[1]/15) * self.scale))
+                else:
+                    surface = self.case[(j,i)][0]
+                rect = surface.get_rect()
+                rect.y = int(self.screen.get_size()[1]/15) *i * self.scale
+                rect.x  = int(self.screen.get_size()[1]/15) * j * self.scale - self.decalage
+
+                if pygame.Rect.colliderect(rect,curseur):
+                    if not self.case[(j,i)]: #la case rouge qui d'affiche 
+                        surface.fill('red')
+                        surface.set_alpha(100)
+                    if pygame.mouse.get_pressed()[0] and self.cooldown > self.COOLDOWN and self.select and self.ligne[i][j] == ' ':
+                        self.cooldown = 0
+                        self.case[(j,i)] = self.image[self.select]
+                        self.ligne[i][j] = self.image[self.select][1]
+                        self.ctrlZ.append((j,i))
+                    
+                    if self.case[(j,i)] and pygame.mouse.get_pressed()[2] and self.cooldown > self.COOLDOWN:
+                        self.case[(j,i)] = None
+                        self.ligne[i][j] = ' '
+                
+                    self.screen.blit(surface,rect)
+
+                if self.case[(j,i)]:
+                    self.screen.blit(surface,rect)
+                pygame.draw.rect(self.screen,(255,255,255),rect,1)
+        
+
+        """
+        Affiche toute les images du bas de l'écran 
+        """
+        c = -1
+        for i in self.image:
+            c+= 1
+            self.screen.blit(self.image[i][0],(int(self.screen.get_size()[1]/15) * c,self.screen.get_size()[0] *0.5))
+            if int(self.screen.get_size()[1]/15) * c < curseur.x < int(self.screen.get_size()[1]/15) * c + int(self.screen.get_size()[1]/15) and self.screen.get_size()[0] *0.5 < curseur.y < self.screen.get_size()[0] *0.5 + int(self.screen.get_size()[1]/15):
+                if pygame.mouse.get_pressed()[0] and self.cooldown > self.COOLDOWN:
+                    self.cooldown = 0
+                    self.select = i
+                pygame.draw.rect(self.screen,(255,0,0),pygame.Rect(int(self.screen.get_size()[1]/15) * c,self.screen.get_size()[0] *0.5,int(self.screen.get_size()[1]/15),int(self.screen.get_size()[1]/15)),2)
+            else:
+                pygame.draw.rect(self.screen,(255,255,255),pygame.Rect(int(self.screen.get_size()[1]/15) * c,self.screen.get_size()[0] *0.5,int(self.screen.get_size()[1]/15),int(self.screen.get_size()[1]/15)),2)
+            
+        if self.select != '':
+            self.screen.blit(self.image[self.select][0],(self.screen.get_size()[0] * 0.8,self.screen.get_size()[0] *0.5))
+        
+        if jeu.classDict['menu'].settingsDict['ShowFPS']:
+            self.screen.blit(jeu.font2.render(f'{int(jeu.clock.get_fps())} FPS',True,(0,0,0)),(jeu.screenSize[0] - jeu.police *1.6,0))
+        
+        open = jeu.font2.render('Ouvrir un niveau existant',True,(255,255,255))
+        openRect = open.get_rect()
+        openRect.x,openRect.y = jeu.screenSize[0] - openRect.width *1.05, jeu.screenSize[1] - jeu.police 
+
+        pygame.draw.rect(self.screen,(255,255,255),openRect,1)
+
+        curseur2 = pygame.Rect(curseur.x,curseur.y,1,1)
+        if pygame.Rect.colliderect(openRect,curseur2):
+            pygame.draw.rect(self.screen,(255,0,0),openRect,1)
+            if pygame.mouse.get_pressed()[0]:
+                self.cooldown = 0
+                self.choixNiv = True
+        
+        self.screen.blit(open,openRect)
+        
+    def open(self):
+        """
+        Fonction qui gère la fenêtre de séléction d'un niveau déjà existant que l'ont voudrais éditer 
+        """
+        self.screen.fill((50,50,50))
+        x,y = pygame.mouse.get_pos()
+
+        c = -1
+        for niv in os.listdir('Niveaux Personnalisés'):
+            c+= 1
+            txt = jeu.font2.render(niv,True,(255,255,255))
+            rect = txt.get_rect()
+            rect.x,rect.y = self.screen.get_size()[0] * 0.5 - rect.width *0.75,rect.height * c + jeu.police*0.25
+            pygame.draw.rect(self.screen,(255,255,255),rect,1)
+
+            if rect.left < x < rect.right and rect.top < y < rect.bottom:
+                pygame.draw.rect(self.screen,(255,0,0),rect,1)
+                txt = jeu.font2.render(niv,True,(200,0,0))
+                if pygame.mouse.get_pressed()[0] and self.cooldown > self.COOLDOWN:
+                    
+                    self.cooldown = 0
+                    self.ligne = {self.ligne:[' ' for i in range(206)] for self.ligne in range(15)}
+                    for x in range(206):
+                        for y in range(15):
+                            self.case[(x,y)] = None
+                    
+                    file = open(f'Niveaux Personnalisés/{niv}', 'r')
+                    data = file.read()
+                    liste = data.split("\n")
+                    file.close()
+
+                    for x in range(206):
+                        for y in range(15):
+                            if liste[y][x] != ' ':
+                                self.case[(x,y)] = [self.image[liste[y][x]][0],liste[y][x]]
+                    self.save = niv
+
+                    self.choixNiv = False
+
+            
+            self.screen.blit(txt,rect)
+
+    def retour(self):
+        """
+        Méthode permettant de faire demi-tour dans la page éditeur, si on est dans le choix
+        de niveau on repasse sur la page dédition et sinon on quitte la page d'édition
+        """
+        self.cooldown += 1       
+        retour = jeu.font2.render('retour',True,(255,255,255))
+        rect = retour.get_rect()
+        rect.x,rect.y = 0,jeu.screenSize[1] - rect.height 
+
+        pygame.draw.rect(self.screen,(255,255,255),rect,1)
+
+        if rect.left < pygame.mouse.get_pos()[0] < rect.right and rect.top < pygame.mouse.get_pos()[1] < rect.bottom or pygame.key.get_pressed()[K_ESCAPE]:
+            pygame.draw.rect(self.screen,(255,0,0),rect,1)
+            retour = jeu.font2.render('retour',True,(150,0,0))
+            if (pygame.key.get_pressed()[K_ESCAPE] or pygame.mouse.get_pressed()[0]) and self.cooldown > self.COOLDOWN:
+                self.cooldown = 0
+                if not self.choixNiv:
+                    jeu.cooldown = 0
+                    jeu.classPos = ''
+                    jeu.position = 'perso'
+                else:
+                    self.choixNiv = False
+            
+        self.screen.blit(retour,rect)
+
+    def update(self):
+        if not self.choixNiv:
+            self.main()
+        else:
+            self.open()
+        self.retour()
+
+        
 jeu = Jeu()
 while True :
     jeu.update()
