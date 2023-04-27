@@ -56,7 +56,7 @@ Nous avons également intégré plusieurs monstres et pouvoirs , ainsi que diff�
   <img src="https://github.com/ArthurArctique/Pario-Bros/blob/603791e9b26d0d7abedaf8d781b394af9098a2c9/Pour%20le%20readme/champi.png" width="100">
   <img src="https://github.com/ArthurArctique/Pario-Bros/blob/603791e9b26d0d7abedaf8d781b394af9098a2c9/Pour%20le%20readme/star.png" width="100" >
   <img src="https://github.com/ArthurArctique/Pario-Bros/blob/603791e9b26d0d7abedaf8d781b394af9098a2c9/Pour%20le%20readme/fireflower.png" width="100" >
-  <img src="https://github.com/ArthurArctique/Pario-Bros/blob/2e0cb301db9ce91b0348f9e09b10b9d1f1d25981/Pour%20le%20readme/pooka.png" width="100" >
+  <img src="https://github.com/ArthurArctique/Pario-Bros/blob/main/Pour%20le%20readme/pooka.png" width="100" >
    <img src="https://github.com/ArthurArctique/Pario-Bros/blob/95d33658602cd351f819ad0a354ca7528c6ca66d/Pour%20le%20readme/poomba.png" width="100">
 </p>
 
