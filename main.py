@@ -2808,6 +2808,7 @@ class Editeur:
                         for y in range(15):
                             if liste[y][x] != ' ':
                                 self.case[(x,y)] = [self.image[liste[y][x]][0],liste[y][x]]
+                                self.ligne[y][x] = liste[y][x]
                     self.save = niv
 
                     self.choixNiv = False
