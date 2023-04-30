@@ -939,6 +939,33 @@ class Jeu:
                 self.position = 'perso'
         
         self.screen.blit(lvlPerso,lvlRect)
+    
+        retour = self.font2.render("Retour",True,(0,0,0))
+        if 0 < self.x < retour.get_width() and 0 < self.y < retour.get_height() or pygame.key.get_pressed()[K_ESCAPE]:
+            retour = self.font2.render("Retour",True,(255,0,0))
+            if (pygame.mouse.get_pressed()[0] or pygame.key.get_pressed()[K_ESCAPE]) and self.cooldown > self.COOLDOWN:
+                self.cooldown = 0
+                self.classPos = 'menu'
+                self.classDict['menu'].position = 'main'
+                self.position = ''
+        self.screen.blit(retour,(0,0))
+
+        c = -1
+        for ville in self.allWorlds[self.world]:
+            c += 1
+            
+            if ville in self.sauvegarde['N']:
+                ville = ville[0].upper() + ville[1:]
+                ville = self.font2.render(ville,True,(0,200,0))
+            else:
+                ville = ville[0].upper() + ville[1:]
+                ville = self.font2.render(ville,True,(150,150,150))
+            
+            
+            
+            self.screen.blit(ville,(self.screenSize[0] * 0.07,self.police*0.5 * c + self.screenSize[1] * 0.25))
+
+            
 
     def perso(self):
         self.x,self.y = pygame.mouse.get_pos()
@@ -1029,6 +1056,8 @@ class Jeu:
 
                 self.screen.blit(lvl,rect)
                 self.screen.blit(self.font2.render('Clique souris droit pour supprimer un niveau',True,(0,255,0)),(0,self.screenSize[1] - self.police * 1.5))
+            
+
     
     def choixMonde(self):
         """
@@ -1810,7 +1839,6 @@ class Mobs:
             else:
                 self.original = pygame.image.load(f'{jeu.world}/assets/paris_others/{self.name}').convert_alpha()
             self.image = pygame.transform.scale(self.original,(self.height * self.playerSize *2,self.width * self.playerSize))
-            self.rect = self.image.get_rect()
             self.est_mort = False
             self.affaibli = True
             self.repetition = False
